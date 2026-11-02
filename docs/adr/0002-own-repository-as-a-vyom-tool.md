@@ -5,11 +5,11 @@
 
 ## Context
 
-suchana started as a script inside Vayu that piped rows into wofi. Living inside the desktop's dotfiles meant it couldn't be installed, versioned or tested on its own, and wofi's plain text list couldn't show live data, previews or actions.
+akashvani started as a script inside Vayu that piped rows into wofi. Living inside the desktop's dotfiles meant it couldn't be installed, versioned or tested on its own, and wofi's plain text list couldn't show live data, previews or actions.
 
 ## Decision
 
-suchana is a Vyom tool in its own repository: a Python package with a `Plugin` class and a `plugin.toml`, loaded by the resident Vyom process. Vayu clones it into `~/.local/share/vyom/plugins/suchana`; anything Vayu-specific is a setting in `[plugin.suchana]`.
+akashvani is a Vyom tool in its own repository: a Python package with a `Plugin` class and a `plugin.toml`, loaded by the resident Vyom process. Vayu clones it into `~/.local/share/vyom/plugins/akashvani`; anything Vayu-specific is a setting in `[plugin.akashvani]`.
 
 ## Consequences
 

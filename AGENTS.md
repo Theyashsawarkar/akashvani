@@ -1,10 +1,10 @@
-# suchana -- notes for AI agents (same as CLAUDE.md)
+# akashvani -- notes for AI agents (same as CLAUDE.md)
 
-A Vyom tool (notifications), in its own repo per Vayu's plugin rule (github.com/Theyashsawarkar/vayu, CLAUDE.md "Plugins"). It must work on any layer-shell compositor without Vayu; Vayu-specific behaviour only through `[plugin.suchana]` in ~/.config/vyom/config.toml.
+A Vyom tool (notifications), in its own repo per Vayu's plugin rule (github.com/Theyashsawarkar/vayu, CLAUDE.md "Plugins"). It must work on any layer-shell compositor without Vayu; Vayu-specific behaviour only through `[plugin.akashvani]` in ~/.config/vyom/config.toml.
 
-- `plugin.toml` names it, its version and the tools it `requires`; `suchana/__init__.py` holds the `Plugin` class (API: vyom/plugin.py in the Vyom repo: search() runs in a worker thread and must not touch widgets; everything else is on the GTK main loop; slow work goes through self.background()).
+- `plugin.toml` names it, its version and the tools it `requires`; `akashvani/__init__.py` holds the `Plugin` class (API: vyom/plugin.py in the Vyom repo: search() runs in a worker thread and must not touch widgets; everything else is on the GTK main loop; slow work goes through self.background()).
 - Every key has a `# keybind: Vyom/<scope> | <keys> | <Verb> ...` line (Vayu's keybinding search and this README's key table read them).
 - Detect, don't assume: no tool or hardware means a clear row or `available()` returning why, never a crash.
 - Every change: a CHANGELOG.md entry; releases are tags with `version` in plugin.toml bumped.
-- Test live without touching the user's screen: `kosha link suchana <checkout>`, then a headless sway (WLR_BACKENDS=headless) with its own D-Bus session (`dbus-run-session`) running `vyom daemon` and `vyom suchana`, `grim` for screenshots, `wtype -s 250` for keys. Never restart the user's own Vyom to test. Logs: `journalctl --user -u vyom -b` (on the real desktop) or the headless daemon's stderr.
+- Test live without touching the user's screen: `kosha link akashvani <checkout>`, then a headless sway (WLR_BACKENDS=headless) with its own D-Bus session (`dbus-run-session`) running `vyom daemon` and `vyom akashvani`, `grim` for screenshots, `wtype -s 250` for keys. Never restart the user's own Vyom to test. Logs: `journalctl --user -u vyom -b` (on the real desktop) or the headless daemon's stderr.
 - The website (docs/, GitHub Pages) is generated: after changing README.md, CHANGELOG.md or docs/adr/, run `python3 scripts/build-site.py` and commit docs/ (CI checks it). A significant design decision gets a new ADR in docs/adr/ (next number; supersede, never rewrite).

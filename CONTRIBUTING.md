@@ -1,28 +1,28 @@
-# Contributing to suchana
+# Contributing to akashvani
 
-Thanks for wanting to make suchana better. Bug reports, ideas and pull
+Thanks for wanting to make akashvani better. Bug reports, ideas and pull
 requests are all welcome.
 
 ## Reporting a bug
 
-Open an [issue](https://github.com/Theyashsawarkar/suchana/issues/new/choose) with what you did, what you
+Open an [issue](https://github.com/Theyashsawarkar/akashvani/issues/new/choose) with what you did, what you
 expected, the output of `vyom list`, and anything relevant from
 the daemon's log (`journalctl --user -u vyom -u vyom-daemon -b`). If the problem shows in every Vyom panel,
 not just notifications, it belongs in [Vyom](https://github.com/Theyashsawarkar/vyom/issues).
 
 ## Development setup
 
-suchana is a [Vyom](https://github.com/Theyashsawarkar/vyom) tool: a Python package loaded by the Vyom
+akashvani is a [Vyom](https://github.com/Theyashsawarkar/vyom) tool: a Python package loaded by the Vyom
 daemon. Work on a clone linked into Vyom's plugin directory:
 
 ```sh
-git clone https://github.com/Theyashsawarkar/suchana ~/code/suchana
-ln -sfn ~/code/suchana ~/.local/share/vyom/plugins/suchana
-vyom quit; vyom suchana        # restart the daemon with your code, open the panel
+git clone https://github.com/Theyashsawarkar/akashvani ~/code/akashvani
+ln -sfn ~/code/akashvani ~/.local/share/vyom/plugins/akashvani
+vyom quit; vyom akashvani        # restart the daemon with your code, open the panel
 journalctl --user -u vyom -u vyom-daemon -b | grep -A20 Traceback
 ```
 
-The API is documented in Vyom's `vyom/plugin.py`; `suchana/__init__.py` holds
+The API is documented in Vyom's `vyom/plugin.py`; `akashvani/__init__.py` holds
 the `Plugin` class.
 
 ## Rules of thumb
@@ -36,7 +36,7 @@ the `Plugin` class.
   `# keybind: Vyom/<scope> | <keys> | <Verb> <object>` line next to its code
   and a row in the README's key table (CI checks this).
 - **Works without Vayu.** Desktop-specific behaviour goes behind a setting in
-  `[plugin.suchana]`.
+  `[plugin.akashvani]`.
 - Every change gets a `CHANGELOG.md` entry. Releases are tags `vX.Y.Z` with
   `version` in `plugin.toml` bumped.
 

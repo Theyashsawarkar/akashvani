@@ -35,7 +35,7 @@ FAMILY = [
     ("Vyom", [("vyom", "व्योम", "panels runtime")]),
     ("Vyom tools", [("dvara", "द्वार", "apps"), ("ganit", "गणित", "calculator"), ("smriti", "स्मृति", "clipboard"),
                     ("bhava", "भाव", "emoji"), ("tarang", "तरंग", "Wi‑Fi"), ("setu", "सेतु", "Bluetooth"),
-                    ("doot", "दूत", "phone"), ("patra", "पात्र", "Docker"), ("suchana", "सूचना", "notifications"),
+                    ("doot", "दूत", "phone"), ("patra", "पात्र", "Docker"), ("akashvani", "आकाशवाणी", "notifications"),
                     ("raga", "राग", "YouTube"), ("mudra", "मुद्रा", "keybindings"), ("urja", "ऊर्जा", "battery"),
                     ("vishram", "विश्राम", "power menu"), ("kendra", "केन्द्र", "quick settings")]),
 ]

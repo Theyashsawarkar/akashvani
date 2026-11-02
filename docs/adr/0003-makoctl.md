@@ -9,7 +9,7 @@ The notification daemon owns notifications; a second store would disagree with i
 
 ## Decision
 
-suchana reads `makoctl list` / `history`, invokes actions through makoctl, and implements do not disturb as a mako mode; every command is configurable for other daemons.
+akashvani reads `makoctl list` / `history`, invokes actions through makoctl, and implements do not disturb as a mako mode; every command is configurable for other daemons.
 
 ## Consequences
 

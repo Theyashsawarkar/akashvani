@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Problems with Vyom itself (every panel, not just suchana)
+  - name: Problems with Vyom itself (every panel, not just akashvani)
     url: https://github.com/Theyashsawarkar/vyom/issues
     about: The panel, the daemon, `vyom dmenu`, theming.

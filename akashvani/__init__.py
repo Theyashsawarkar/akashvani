@@ -1,4 +1,4 @@
-"""suchana (सूचना, "notice"): notifications for Vyom, over mako.
+"""akashvani (आकाशवाणी, "notice"): notifications for Vyom, over mako.
 
 What's on screen now (with the actions it offers, and dismiss), then the
 history, grouped by app, newest first. The preview shows the whole
@@ -41,7 +41,7 @@ def icon_of(n):
 
 
 class Plugin(Base):
-    name, title, icon, color = "suchana", "Notifications", "\U000f009a", "red"
+    name, title, icon, color = "akashvani", "Notifications", "\U000f009a", "red"
     placeholder = "Search notifications…"
     preview = True
     preview_width = 320

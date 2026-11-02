@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in suchana doesn't work as described
+description: Something in akashvani doesn't work as described
 labels: [bug]
 body:
   - type: textarea

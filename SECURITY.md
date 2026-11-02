@@ -2,15 +2,15 @@
 
 ## Supported versions
 
-Only the latest release of suchana gets fixes.
+Only the latest release of akashvani gets fixes.
 
 ## Reporting a vulnerability
 
 Please **don't open a public issue**. Report it privately through
-[GitHub's security advisories](https://github.com/Theyashsawarkar/suchana/security/advisories/new),
+[GitHub's security advisories](https://github.com/Theyashsawarkar/akashvani/security/advisories/new),
 with what an attacker could do and how to reproduce it. You'll get a reply
 within a week; a fix and a release follow as soon as it's confirmed, with
 credit to you unless you'd rather not.
 
-suchana runs as your user and runs only the commands it documents (and the
+akashvani runs as your user and runs only the commands it documents (and the
 ones you configure in `~/.config/vyom/config.toml`).

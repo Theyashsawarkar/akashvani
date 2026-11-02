@@ -2,8 +2,11 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
-## Unreleased
+## v0.2.0 -- 2026-11-02
 
+- **Renamed from suchana to akashvani** (आकाशवाणी, the voice from the sky). The repository moved to
+  github.com/Theyashsawarkar/akashvani (the old address redirects); `kosha update` moves an install
+  over by itself; open it with `vyom akashvani`.
 - Screenshots in the README and on the website.
 
 ## v0.1.4 -- 2026-10-21

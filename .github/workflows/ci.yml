@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile
-        run: python -m compileall -q suchana
+        run: python -m compileall -q akashvani
       - name: plugin.toml
         run: |
           python - <<'EOF'
@@ -22,7 +22,7 @@ jobs:
           m = tomllib.load(open("plugin.toml", "rb"))
           for key in ("name", "title", "version", "vyom", "icon", "color", "description"):
               assert m.get(key), f"plugin.toml: missing {key}"
-          assert m["name"] == "suchana", m["name"]
+          assert m["name"] == "akashvani", m["name"]
           assert f"## v{m['version']} " in open("CHANGELOG.md").read(), "CHANGELOG.md: no entry for this version"
           EOF
       - name: Every key is documented
@@ -31,7 +31,7 @@ jobs:
           import pathlib, re
           readme = pathlib.Path("README.md").read_text()
           missing = []
-          for path in pathlib.Path("suchana").rglob("*.py"):
+          for path in pathlib.Path("akashvani").rglob("*.py"):
               for line in path.read_text().splitlines():
                   m = re.match(r"#\s*keybind:\s*Vyom/[^|]+\|\s*([^|]+?)\s*\|", line)
                   if m and f"`{m.group(1)}`" not in readme:
