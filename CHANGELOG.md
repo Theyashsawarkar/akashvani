@@ -2,6 +2,10 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
+## Unreleased
+
+- Screenshots in the README and on the website.
+
 ## v0.1.4 -- 2026-10-21
 
 - A website (GitHub Pages, https://theyashsawarkar.github.io/suchana/): the README as a home page, the

@@ -22,6 +22,11 @@
 
 <!-- No screenshot: notifications shows personal data (your own notifications). -->
 
+<p align="center">
+  <img alt="suchana: an urgent notification on screen, the history grouped by app, and the picked one's details with Dismiss and Copy; a do-not-disturb switch at the top" src="assets/screenshots/suchana.png" width="100%">
+</p>
+<p align="center"><sub>Screenshots use made-up demo notifications.</sub></p>
+
 > *Suchana* (सूचना) is Sanskrit for "notice": the notices your apps send you.
 
 suchana is notifications for [Vyom](https://github.com/Theyashsawarkar/vyom): one keyboard-driven panel that opens instantly, with live data, a preview and a key for everything. It runs on any compositor with the layer-shell protocol (sway, Hyprland, river, niri, Wayfire, labwc…). In [Vayu](https://github.com/Theyashsawarkar/vayu), the desktop it was built for, it replaces notification-history.py.
