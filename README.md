@@ -6,6 +6,15 @@
   </picture>
 </p>
 
+<!-- identity -->
+<p align="center">
+  <b>पथि प्रग्रहिणं कंसमाभाष्याहाशरीरवाक् ।<br>
+  अस्यास्त्वामष्टमो गर्भो हन्ता यां वहसेऽबुध ॥</b><br>
+  <i>On the road, a bodiless voice spoke to Kamsa, who held the reins.</i><br>
+  <sub>Bhāgavata Purāṇa 10.1.34</sub>
+</p>
+<!-- /identity -->
+
 <p align="center">
   <b>Notifications (mako): what's on screen with its actions, the history grouped by app, a full preview, do not disturb.</b><br>
   Notifications. A tool for <a href="https://github.com/Theyashsawarkar/vyom">Vyom</a>, keyboard-driven panels for Wayland.
@@ -27,7 +36,7 @@
 </p>
 <p align="center"><sub>Screenshots use made-up demo notifications.</sub></p>
 
-> *Akashvani* (आकाशवाणी) is Sanskrit for "notice": the notices your apps send you.
+> *Akashvani* (आकाशवाणी) is Sanskrit for "voice from the sky": the notices your apps send you.
 
 akashvani is notifications for [Vyom](https://github.com/Theyashsawarkar/vyom): one keyboard-driven panel that opens instantly, with live data, a preview and a key for everything. It runs on any compositor with the layer-shell protocol (sway, Hyprland, river, niri, Wayfire, labwc…). In [Vayu](https://github.com/Theyashsawarkar/vayu), the desktop it was built for, it replaces notification-history.py.
 

@@ -6,3 +6,6 @@ tagline = "Notifications (mako): what's on screen with its actions, the history 
 color = "red"
 kind = "a Vyom tool"
 logo = "assets/logo.svg"
+shloka = "पथि प्रग्रहिणं कंसमाभाष्याहाशरीरवाक् ।\nअस्यास्त्वामष्टमो गर्भो हन्ता यां वहसेऽबुध ॥"
+shloka_meaning = "On the road, a bodiless voice spoke to Kamsa, who held the reins."
+shloka_source = "Bhāgavata Purāṇa 10.1.34"
