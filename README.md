@@ -16,7 +16,7 @@
 <!-- /identity -->
 
 <p align="center">
-  <b>Notifications (mako): what's on screen with its actions, the history grouped by app, a full preview, do not disturb.</b><br>
+  <b>Notifications (mako): what's on screen with its actions, each app's history stacked with times, a full preview, do not disturb for a while.</b><br>
   Notifications. A tool for <a href="https://github.com/Theyashsawarkar/vyom">Vyom</a>, keyboard-driven panels for Wayland.
 </p>
 
@@ -24,7 +24,7 @@
   <a href="https://github.com/Theyashsawarkar/akashvani/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Theyashsawarkar/akashvani/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/Theyashsawarkar/akashvani/releases"><img alt="Release" src="https://img.shields.io/github/v/release/Theyashsawarkar/akashvani?color=cba6f7&label=release"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-f5e0dc"></a>
-  <a href="https://github.com/Theyashsawarkar/vyom"><img alt="Vyom 0.2.5+" src="https://img.shields.io/badge/vyom-0.2.5%2B-89b4fa"></a>
+  <a href="https://github.com/Theyashsawarkar/vyom"><img alt="Vyom 0.6.0+" src="https://img.shields.io/badge/vyom-0.6.0%2B-89b4fa"></a>
   <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-a6e3a1">
   <img alt="Wayland" src="https://img.shields.io/badge/wayland-layer--shell-94e2d5">
 </p>
@@ -32,7 +32,7 @@
 <!-- No screenshot: notifications shows personal data (your own notifications). -->
 
 <p align="center">
-  <img alt="akashvani: an urgent notification on screen, the history grouped by app, and the picked one's details with Dismiss and Copy; a do-not-disturb switch at the top" src="assets/screenshots/akashvani.png" width="100%">
+  <img alt="akashvani: an urgent battery notification on screen with a red Urgent chip, each app's notifications stacked with a count and a time, the preview with numbered action buttons, Copy and a red Dismiss; do not disturb with a duration in the header" src="assets/screenshots/akashvani.png" width="100%">
 </p>
 <p align="center"><sub>Screenshots use made-up demo notifications.</sub></p>
 
@@ -53,10 +53,11 @@ akashvani is notifications for [Vyom](https://github.com/Theyashsawarkar/vyom): 
 
 ## Features
 
-- What's **on screen now**, with the actions it offers (run them, or dismiss it).
-- The history, **grouped by app**, newest first, with each app's icon; urgent ones flagged.
-- The preview shows the whole message.
-- A **do not disturb** switch (mako's `do-not-disturb` mode, or your own commands).
+- What's **on screen now**, urgent ones first with a red **Urgent** chip, with the actions each offers.
+- The history with **each app's notifications stacked into one row** with a count (Enter opens the stack), under Earlier today, Yesterday and Older.
+- **A time on every row** ("now", "2 min", "09:41"): akashvani notes when each notification arrives (mako keeps no times).
+- The preview shows the whole message and its **actions as buttons**, numbered `Alt+1..9`, with Copy and a red Dismiss.
+- **Do not disturb for an hour, till tomorrow morning, or till you turn it off**, in the header; a timer turns it off again even with the panel closed, and the panel says how many notifications it's holding.
 - Keyboard first: every action has a key, shown in the footer; the mouse works too.
 - Never freezes the panel: slow commands run in the background.
 
@@ -64,7 +65,7 @@ akashvani is notifications for [Vyom](https://github.com/Theyashsawarkar/vyom): 
 
 ### Requirements
 
-- [Vyom](https://github.com/Theyashsawarkar/vyom) 0.2.5 or newer (Python 3.11+, PyGObject, GTK 4, [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell), a Nerd Font)
+- [Vyom](https://github.com/Theyashsawarkar/vyom) 0.6.0 or newer (Python 3.11+, PyGObject, GTK 4, [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell), a Nerd Font)
 - `makoctl`
 
 ### Install
@@ -94,10 +95,12 @@ Open it with `vyom akashvani` (or your key). Type to search; the footer always s
 
 | Key | Action |
 |---|---|
-| `Enter` | Run the notification's default action, or copy its text |
+| `Enter` | Run the notification's default action (or open an app's stack, or copy it) |
+| `Alt+1..9` | Run that numbered action of the notification |
 | `Ctrl+C` | Copy the notification's text |
-| `Ctrl+Backspace` | Dismiss the on-screen notification |
-| `Ctrl+N` | Turn do not disturb on or off |
+| `Delete` | Dismiss the on-screen notification |
+| `Ctrl+Backspace` | Dismiss every notification on screen |
+| `Ctrl+N` | Cycle do not disturb: off, 1 hour, till tomorrow, till you turn it off |
 | `Esc` | Close the panel |
 
 Every Vyom panel also has `Up`/`Down` (or `Ctrl+K`/`Ctrl+J`) to move and `Page Up`/`Page Down` to jump. Each tool opens from its own key.
@@ -111,6 +114,9 @@ Everything is optional, in `~/.config/vyom/config.toml` under `[plugin.akashvani
 | `dnd_status` | (makoctl mode) | Command printing the current mode |
 | `dnd_on_when` | ^dnd$ | Regex: do not disturb is on |
 | `dnd_on / dnd_off` | (makoctl mode -a/-r) | Commands to turn it on / off |
+| `dnd_morning` | 08:00 | When "till tomorrow" ends |
+
+A timed do not disturb is a systemd user timer (`systemctl --user list-timers akashvani-dnd-off.timer`), or a detached `sleep` without systemd.
 
 Run `vyom reload` after editing.
 

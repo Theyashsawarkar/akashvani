@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>akashvani · Notifications (mako): what&#x27;s on screen with its actions, the history grouped by app, a full preview, do not disturb.</title>
-<meta name="description" content="Notifications (mako): what&#x27;s on screen with its actions, the history grouped by app, a full preview, do not disturb.">
-<meta property="og:title" content="akashvani · Notifications (mako): what&#x27;s on screen with its actions, the history grouped by app, a full preview, do not disturb.">
-<meta property="og:description" content="Notifications (mako): what&#x27;s on screen with its actions, the history grouped by app, a full preview, do not disturb.">
+<title>akashvani · Notifications (mako): what&#x27;s on screen with its actions, each app&#x27;s history stacked with times, a full preview, do not disturb for a while.</title>
+<meta name="description" content="Notifications (mako): what&#x27;s on screen with its actions, each app&#x27;s history stacked with times, a full preview, do not disturb for a while.">
+<meta property="og:title" content="akashvani · Notifications (mako): what&#x27;s on screen with its actions, each app&#x27;s history stacked with times, a full preview, do not disturb for a while.">
+<meta property="og:description" content="Notifications (mako): what&#x27;s on screen with its actions, each app&#x27;s history stacked with times, a full preview, do not disturb for a while.">
 <meta name="theme-color" content="#11111b">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,25 +22,25 @@
 <div class="eyebrow">a Vyom tool</div>
 <h1>akashvani</h1>
 <div class="sa">आकाशवाणी <span>· “voice from the sky”</span></div>
-<p class="lead">Notifications (mako): what&#x27;s on screen with its actions, the history grouped by app, a full preview, do not disturb.</p>
+<p class="lead">Notifications (mako): what&#x27;s on screen with its actions, each app&#x27;s history stacked with times, a full preview, do not disturb for a while.</p>
 <figure class="shloka"><p lang="sa">पथि प्रग्रहिणं कंसमाभाष्याहाशरीरवाक् ।<br>अस्यास्त्वामष्टमो गर्भो हन्ता यां वहसेऽबुध ॥</p><figcaption>On the road, a bodiless voice spoke to Kamsa, who held the reins. <cite>Bhāgavata Purāṇa 10.1.34</cite></figcaption></figure>
 <div class="cta"><a class="btn primary" href="#install">Install</a><a class="btn" href="https://github.com/Theyashsawarkar/akashvani">GitHub ↗</a>
-<a class="btn" href="changelog.html">What's new in v0.2.0</a></div>
-<div class="meta"><span><b>v0.2.0</b> latest</span><span><b>6</b> releases</span><span><b>3</b> decisions recorded</span><span><b>MIT</b> license</span></div>
+<a class="btn" href="changelog.html">What's new in v0.3.0</a></div>
+<div class="meta"><span><b>v0.3.0</b> latest</span><span><b>7</b> releases</span><span><b>4</b> decisions recorded</span><span><b>MIT</b> license</span></div>
 </div><img class="logo" src="assets/logo.svg" alt="akashvani logo"></div></section>
 <div class="wrap"><aside class="toc"><b>On this page</b><a class="l2" href="#features">Features</a><a class="l2" href="#install">Install</a><a class="l3" href="#requirements">Requirements</a><a class="l3" href="#install">Install</a><a class="l3" href="#update-and-uninstall">Update and uninstall</a><a class="l2" href="#usage">Usage</a><a class="l2" href="#configuration">Configuration</a><a class="l2" href="#troubleshooting">Troubleshooting</a><a class="l2" href="#the-vyom-family">The Vyom family</a><a class="l2" href="#contributing">Contributing</a><a class="l2" href="#license">License</a></aside><article>
 <!-- No screenshot: notifications shows personal data (your own notifications). -->
 <p align="center">
-  <img alt="akashvani: an urgent notification on screen, the history grouped by app, and the picked one's details with Dismiss and Copy; a do-not-disturb switch at the top" src="assets/screenshots/akashvani.png" width="100%">
+  <img alt="akashvani: an urgent battery notification on screen with a red Urgent chip, each app's notifications stacked with a count and a time, the preview with numbered action buttons, Copy and a red Dismiss; do not disturb with a duration in the header" src="assets/screenshots/akashvani.png" width="100%">
 </p>
 <p align="center"><sub>Screenshots use made-up demo notifications.</sub></p>
 <blockquote><p><em>Akashvani</em> (आकाशवाणी) is Sanskrit for "voice from the sky": the notices your apps send you.</p></blockquote>
 <p>akashvani is notifications for <a href="https://github.com/Theyashsawarkar/vyom">Vyom</a>: one keyboard-driven panel that opens instantly, with live data, a preview and a key for everything. It runs on any compositor with the layer-shell protocol (sway, Hyprland, river, niri, Wayfire, labwc…). In <a href="https://github.com/Theyashsawarkar/vayu">Vayu</a>, the desktop it was built for, it replaces notification-history.py.</p>
 <h2 id="features"><a class="anchor" href="#features">#</a>Features</h2>
-<ul><li>What's <strong>on screen now</strong>, with the actions it offers (run them, or dismiss it).</li><li>The history, <strong>grouped by app</strong>, newest first, with each app's icon; urgent ones flagged.</li><li>The preview shows the whole message.</li><li>A <strong>do not disturb</strong> switch (mako's <code>do-not-disturb</code> mode, or your own commands).</li><li>Keyboard first: every action has a key, shown in the footer; the mouse works too.</li><li>Never freezes the panel: slow commands run in the background.</li></ul>
+<ul><li>What's <strong>on screen now</strong>, urgent ones first with a red <strong>Urgent</strong> chip, with the actions each offers.</li><li>The history with <strong>each app's notifications stacked into one row</strong> with a count (Enter opens the stack), under Earlier today, Yesterday and Older.</li><li><strong>A time on every row</strong> ("now", "2 min", "09:41"): akashvani notes when each notification arrives (mako keeps no times).</li><li>The preview shows the whole message and its <strong>actions as buttons</strong>, numbered <code>Alt+1..9</code>, with Copy and a red Dismiss.</li><li><strong>Do not disturb for an hour, till tomorrow morning, or till you turn it off</strong>, in the header; a timer turns it off again even with the panel closed, and the panel says how many notifications it's holding.</li><li>Keyboard first: every action has a key, shown in the footer; the mouse works too.</li><li>Never freezes the panel: slow commands run in the background.</li></ul>
 <h2 id="install"><a class="anchor" href="#install">#</a>Install</h2>
 <h3 id="requirements"><a class="anchor" href="#requirements">#</a>Requirements</h3>
-<ul><li><a href="https://github.com/Theyashsawarkar/vyom">Vyom</a> 0.2.5 or newer (Python 3.11+, PyGObject, GTK 4, <a href="https://github.com/wmww/gtk4-layer-shell">gtk4-layer-shell</a>, a Nerd Font)</li><li><code>makoctl</code></li></ul>
+<ul><li><a href="https://github.com/Theyashsawarkar/vyom">Vyom</a> 0.6.0 or newer (Python 3.11+, PyGObject, GTK 4, <a href="https://github.com/wmww/gtk4-layer-shell">gtk4-layer-shell</a>, a Nerd Font)</li><li><code>makoctl</code></li></ul>
 <h3 id="install"><a class="anchor" href="#install">#</a>Install</h3>
 <pre class="code" data-lang="sh"><code>git clone https://github.com/Theyashsawarkar/akashvani ~/.local/share/vyom/plugins/akashvani
 vyom reload           # pick it up (or log out and in)
@@ -52,11 +52,12 @@ vyom akashvani            # open it; run it again to close</code></pre>
 rm -rf ~/.local/share/vyom/plugins/akashvani &amp;&amp; vyom reload          # uninstall</code></pre>
 <h2 id="usage"><a class="anchor" href="#usage">#</a>Usage</h2>
 <p>Open it with <code>vyom akashvani</code> (or your key). Type to search; the footer always shows the keys for what's selected.</p>
-<div class="table"><table><thead><tr><th>Key</th><th>Action</th></tr></thead><tbody><tr><td><code>Enter</code></td><td>Run the notification's default action, or copy its text</td></tr><tr><td><code>Ctrl+C</code></td><td>Copy the notification's text</td></tr><tr><td><code>Ctrl+Backspace</code></td><td>Dismiss the on-screen notification</td></tr><tr><td><code>Ctrl+N</code></td><td>Turn do not disturb on or off</td></tr><tr><td><code>Esc</code></td><td>Close the panel</td></tr></tbody></table></div>
+<div class="table"><table><thead><tr><th>Key</th><th>Action</th></tr></thead><tbody><tr><td><code>Enter</code></td><td>Run the notification's default action (or open an app's stack, or copy it)</td></tr><tr><td><code>Alt+1..9</code></td><td>Run that numbered action of the notification</td></tr><tr><td><code>Ctrl+C</code></td><td>Copy the notification's text</td></tr><tr><td><code>Delete</code></td><td>Dismiss the on-screen notification</td></tr><tr><td><code>Ctrl+Backspace</code></td><td>Dismiss every notification on screen</td></tr><tr><td><code>Ctrl+N</code></td><td>Cycle do not disturb: off, 1 hour, till tomorrow, till you turn it off</td></tr><tr><td><code>Esc</code></td><td>Close the panel</td></tr></tbody></table></div>
 <p>Every Vyom panel also has <code>Up</code>/<code>Down</code> (or <code>Ctrl+K</code>/<code>Ctrl+J</code>) to move and <code>Page Up</code>/<code>Page Down</code> to jump. Each tool opens from its own key.</p>
 <h2 id="configuration"><a class="anchor" href="#configuration">#</a>Configuration</h2>
 <p>Everything is optional, in <code>~/.config/vyom/config.toml</code> under <code>[plugin.akashvani]</code>:</p>
-<div class="table"><table><thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead><tbody><tr><td><code>dnd_status</code></td><td>(makoctl mode)</td><td>Command printing the current mode</td></tr><tr><td><code>dnd_on_when</code></td><td>^dnd$</td><td>Regex: do not disturb is on</td></tr><tr><td><code>dnd_on / dnd_off</code></td><td>(makoctl mode -a/-r)</td><td>Commands to turn it on / off</td></tr></tbody></table></div>
+<div class="table"><table><thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead><tbody><tr><td><code>dnd_status</code></td><td>(makoctl mode)</td><td>Command printing the current mode</td></tr><tr><td><code>dnd_on_when</code></td><td>^dnd$</td><td>Regex: do not disturb is on</td></tr><tr><td><code>dnd_on / dnd_off</code></td><td>(makoctl mode -a/-r)</td><td>Commands to turn it on / off</td></tr><tr><td><code>dnd_morning</code></td><td>08:00</td><td>When "till tomorrow" ends</td></tr></tbody></table></div>
+<p>A timed do not disturb is a systemd user timer (<code>systemctl --user list-timers akashvani-dnd-off.timer</code>), or a detached <code>sleep</code> without systemd.</p>
 <p>Run <code>vyom reload</code> after editing.</p>
 <h2 id="troubleshooting"><a class="anchor" href="#troubleshooting">#</a>Troubleshooting</h2>
 <ul><li><strong>Nothing opens.</strong> <code>vyom list</code> shows every installed tool, and why one is skipped (a missing requirement, or a Vyom that's too old).</li><li><strong>It opened, then something failed.</strong> Look for a <code>Traceback</code> in the daemon's log, <code>journalctl --user -u vyom -u vyom-daemon -b</code> (without systemd: <code>~/.local/state/vyom/daemon.log</code>), and <a href="https://github.com/Theyashsawarkar/akashvani/issues/new/choose">open an issue</a> with it.</li><li><strong>No blur or rounded corners.</strong> That's the compositor: on SwayFX, add <code>layer_effects &quot;vyom&quot; { blur enable; corner_radius 20; shadows enable }</code>.</li></ul>
