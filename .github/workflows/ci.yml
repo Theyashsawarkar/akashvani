@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile
-        run: python -m compileall -q akashvani
+        run: python -m compileall -q akashvani scripts
       - name: plugin.toml
         run: |
           python - <<'EOF'
@@ -38,5 +38,9 @@ jobs:
                       missing.append(m.group(1))
           assert not missing, f"keys missing from README.md: {missing}"
           EOF
+      - name: Keys match the keymaps
+        run: |
+          git clone --depth 1 https://github.com/Theyashsawarkar/vyom /tmp/vyom
+          VYOM_CORE=/tmp/vyom python3 scripts/keybinds.py --check
       - name: Website is up to date
         run: python3 scripts/build-site.py --check

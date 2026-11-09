@@ -26,12 +26,32 @@ from gi.repository import Gdk, Gio, GLib, Gtk, Pango
 from vyom import Hint, Row, Section, ui, util
 from vyom import Plugin as Base
 
-# keybind: Vyom/notifications | Enter | Run the notification's default action (or open an app's stack, or copy it)
-# keybind: Vyom/notifications | Alt+1..9 | Run that numbered action of the notification
-# keybind: Vyom/notifications | Ctrl+C | Copy the notification's text
-# keybind: Vyom/notifications | Delete | Close the on-screen notification (dismiss it)
-# keybind: Vyom/notifications | Ctrl+Backspace | Close every notification on screen (dismiss all)
-# keybind: Vyom/notifications | Ctrl+N | Cycle do not disturb (off, 1 hour, till tomorrow, till you turn it off)
+from . import vim
+
+# KEYBINDS (generated from akashvani/vim.py by scripts/keybinds.py; don't edit by hand)
+# keybind: Vyom/akashvani:normal | Enter | Run the notification's default action (or open an app's stack, or copy it)
+# keybind: Vyom/akashvani:normal | h | Fold the app's stack
+# keybind: Vyom/akashvani:normal | l | Open the app's stack
+# keybind: Vyom/akashvani:normal | d d | Dismiss the on-screen notification (it stays in the history)
+# keybind: Vyom/akashvani:normal | u | Bring back the last dismissed notification
+# keybind: Vyom/akashvani:normal | y y | Copy the notification's text
+# keybind: Vyom/akashvani | Alt+1..9 | Run that numbered action of the notification
+# keybind: Vyom/akashvani | Ctrl+N | Cycle do not disturb (off, 1 hour, till tomorrow, till you turn it off)
+# keybind: Vyom/akashvani leader:normal | Space x 1..9 | Run that numbered action of the notification
+# keybind: Vyom/akashvani leader:normal | Space n n | Cycle do not disturb (off, 1 hour, till tomorrow, till you turn it off)
+# keybind: Vyom/akashvani leader:normal | Space n o | Turn do not disturb off
+# keybind: Vyom/akashvani leader:normal | Space n h | Turn do not disturb on for an hour
+# keybind: Vyom/akashvani leader:normal | Space n t | Turn do not disturb on till tomorrow morning
+# keybind: Vyom/akashvani leader:normal | Space n a | Turn do not disturb on till you turn it off
+# keybind: Vyom/akashvani leader:normal | Space d d | Dismiss the on-screen notification
+# keybind: Vyom/akashvani leader:normal | Space d a | Dismiss every notification on screen (asks first)
+# keybind: Vyom/akashvani leader:normal | Space f l | Show only what's on screen now
+# keybind: Vyom/akashvani leader:normal | Space f h | Show only the history
+# keybind: Vyom/akashvani leader:normal | Space f a | Show only the selected notification's app
+# keybind: Vyom/akashvani leader:normal | Space f c | Clear the filter (show everything)
+# keybind: Vyom/akashvani leader:normal | Space y y | Copy the notification's text
+# keybind: Vyom/akashvani leader:normal | Space y b | Copy the notification's body only
+# END KEYBINDS
 
 TIMES = "akashvani-times"
 DND = "akashvani-dnd"
@@ -156,8 +176,12 @@ class Plugin(Base):
     placeholder = "Search notifications…"
     preview = True
     preview_width = 340
-    hints = [Hint("Enter", "default action"), Hint("Alt+1..9", "actions"), Hint("Del", "dismiss"),
-             Hint("Ctrl+N", "do not disturb")]
+    hints = [Hint("Enter", "default action"), Hint("h/l", "fold"), Hint("d d", "dismiss"), Hint("u", "bring back"),
+             Hint("Space n", "do not disturb")]
+    insert_hints = [Hint("Enter", "default action"), Hint("Ctrl+N", "do not disturb"), Hint("Esc", "normal mode")]
+    modal = True             # Vyom's vim keys (ADR 0008); akashvani/vim.py
+    start_mode = "normal"    # a manage tool: stray typing changes nothing
+    key_groups = vim.GROUPS
     empty_text = "No notifications"
 
     def __init__(self, vyom, conf):
@@ -165,6 +189,7 @@ class Plugin(Base):
         self.dnd_box = None
         self.today_chip = None
         self.open_stacks = set()     # apps whose stack is open
+        self.only = ("", "")         # a filter: ("live" | "history" | "app", app name)
         self.dnd = ("off", 0)        # (mode, until)
         self.held = 0
         self.today = 0
@@ -253,7 +278,7 @@ class Plugin(Base):
         self.today_chip = ui.chip("", "gray")
         self.today_chip.set_visible(False)
         box.append(self.today_chip)
-        box.append(ui.label("\U000f009b", "glyph", "dnd-icon", valign=Gtk.Align.CENTER, tooltip_text="Do not disturb (Ctrl+N)"))
+        box.append(ui.label("\U000f009b", "glyph", "dnd-icon", valign=Gtk.Align.CENTER, tooltip_text="Do not disturb (Space n)"))
         self.dnd_box = Gtk.Box(valign=Gtk.Align.CENTER)
         box.append(self.dnd_box)
         self.show_dnd()
@@ -267,7 +292,7 @@ class Plugin(Base):
             self.dnd_box.remove(old)
         seg = ui.segmented(DND_MODES, self.dnd[0], self.pick_dnd)
         seg.add_css_class("dnd")
-        seg.set_tooltip_text("Do not disturb (Ctrl+N cycles)")
+        seg.set_tooltip_text("Do not disturb (Space n n cycles)")
         child = seg.get_first_child()
         while child is not None:
             child.set_can_focus(False)
@@ -289,10 +314,11 @@ class Plugin(Base):
         txt = ui.vbox(ui.hbox(ui.label("Do not disturb", "hero-title"), ui.chip("On", "yellow", "\U000f009b"), spacing=8),
                       ui.label(f"{end} · {held}", "hero-sub", xalign=0), spacing=4)
         txt.set_hexpand(True)
-        return ui.hero(txt, ui.button("Turn off", lambda: self.pick_dnd("off"), key="Ctrl+N" if mode == "on" else ""),
+        return ui.hero(txt, ui.button("Turn off", lambda: self.pick_dnd("off"), key="Space n o" if mode == "on" else ""),
                        color="yellow")
 
     def opened(self, args):
+        self.only = ("", "")    # a Space f filter lasts while the panel is open: it says so only then
         super().opened(args)
         self.dnd = self.read_dnd()
         self.show_dnd()
@@ -332,12 +358,21 @@ class Plugin(Base):
         today = datetime.date.today()
         self.today = sum(1 for n in live + hist if n["t"] and datetime.date.fromtimestamp(n["t"]) == today)
 
+        only, only_app = self.only
+        if only == "history":
+            live = []
+        elif only == "live":
+            hist = []
+        elif only == "app":
+            live = [n for n in live if (n.get("app_name") or "Other") == only_app]
+            hist = [n for n in hist if (n.get("app_name") or "Other") == only_app]
+
         def match(n):
             return not q or util.fuzzy(q, f"{n.get('app_name', '')} {n.get('summary', '')} {n.get('body', '')}") is not None
         rows = []
         live = sorted((n for n in live if match(n)), key=lambda n: (n.get("urgency") != "critical", -(n["t"] or 0)))
         if live:
-            rows.append(Section("On screen now", len(live), "Ctrl+⌫ dismisses all" if len(live) > 1 else ""))
+            rows.append(Section("On screen now", len(live), "Space d a dismisses all" if len(live) > 1 else ""))
             rows += [self.row(n, True, now) for n in live]
         live_ids = {n.get("id") for n in live}
         hist = [n for n in hist if match(n) and n.get("id") not in live_ids]
@@ -407,16 +442,16 @@ class Plugin(Base):
             btns.append(ui.button(acts["default"] or "Open", lambda: self.invoke(n, "default"), "primary",
                                   "\U000f03cc", "Enter"))
         for i, (k, label) in enumerate(self.actions(n, live), 1):
-            btns.append(ui.button(label, lambda k=k: self.invoke(n, k), icon="\U000f040a", key=f"Alt+{i}"))
-        btns.append(ui.button("Copy", lambda: self.copy(n), icon="\U000f018f", key="Ctrl+C"))
+            btns.append(ui.button(label, lambda k=k: self.invoke(n, k), icon="\U000f040a", key=f"Space x {i}"))
+        btns.append(ui.button("Copy", lambda: self.copy(n), icon="\U000f018f", key="y y"))
         if live:
-            btns.append(ui.button("Dismiss", lambda: self.dismiss(n), "danger", "\U000f0156", "Del"))
+            btns.append(ui.button("Dismiss", lambda: self.dismiss(n), "danger", "\U000f0156", "d d"))
         for b in _children(btns):
             spread(b)
         parts.append(btns)
         if len(stack) > 1 and row.data["n"] is stack[0]:
             others = ui.vbox(ui.section(f"Also from {n.get('app_name') or 'this app'}", len(stack) - 1,
-                                        "Enter opens" if row.data["app"] not in self.open_stacks else "Enter folds"),
+                                        "l opens" if row.data["app"] not in self.open_stacks else "h folds"),
                              spacing=4)
             for o in stack[1:6]:
                 line = ui.hbox(ui.label(when(o["t"]) or "·", "row-meta", width_chars=6, xalign=0),
@@ -438,8 +473,9 @@ class Plugin(Base):
         self.set_status("dismissed")
         self.panel.refresh_now(keep_selection=True)
 
-    def copy(self, n):
-        util.copy("\n".join(x for x in (n.get("summary"), util.strip_markup(n.get("body") or "")) if x))
+    def copy(self, n, body_only=False):
+        body = util.strip_markup(n.get("body") or "")
+        util.copy(body if body_only else "\n".join(x for x in (n.get("summary"), body) if x))
         self.set_status("copied")
 
     def activate(self, row, mods):
@@ -454,36 +490,90 @@ class Plugin(Base):
             self.copy(n)
         return False
 
+    # ================================================================ keys
+    # The modes, counts and sequences are Vyom's; akashvani/vim.py is its keys.
+    def keys(self, tab):
+        return vim.keys(tab)
+
     def key(self, name, row, mods):
+        """Chords that work in both modes; they never type."""
         if mods == {"ctrl"} and name == "n":
-            keys = [k for k, _ in DND_MODES]
-            self.pick_dnd(keys[(keys.index(self.dnd[0]) + 1) % len(keys)])
+            self.v_dnd(1, "next")
             return True
-        if mods == {"ctrl"} and name == "BackSpace":
-            util.run(["makoctl", "dismiss", "-a"])
-            self.set_status("dismissed everything on screen")
-            self.refresh()
-            return True
-        if row is None:
-            return False
-        n = row.data["n"]
-        if mods == {"alt"} and len(name) == 1 and name in "123456789":
-            acts = self.actions(n, row.data["live"])
-            i = int(name) - 1
-            if i < len(acts):
-                self.invoke(n, acts[i][0])
-            return True
-        if mods == {"ctrl"} and name == "c":
-            self.copy(n)
-            return True
-        if name in ("Delete", "KP_Delete") and not mods and row.data["live"]:
-            e = self.panel.entry
-            if e.get_position() < len(e.get_text()):
-                return False   # deleting text in the search box
-            self.dismiss(n)
+        if row is not None and mods == {"alt"} and len(name) == 1 and name in "123456789":
+            self.v_action(1, name)
             return True
         return False
 
+    def selected(self):
+        row = self.panel.selected_row() if self.panel else None
+        return row if row is not None and row.data else None
+
+    def v_dnd(self, _n, arg):
+        keys = [k for k, _ in DND_MODES]
+        self.pick_dnd(keys[(keys.index(self.dnd[0]) + 1) % len(keys)] if arg == "next" else arg)
+
+    def v_action(self, _n, arg):
+        row = self.selected()
+        if row is None:
+            return
+        acts = self.actions(row.data["n"], row.data["live"])
+        i = int(arg) - 1
+        if i < len(acts):
+            self.invoke(row.data["n"], acts[i][0])
+        else:
+            self.set_status(f"this notification has no action {arg}", kind="bad")
+
+    def v_fold(self, _n, arg):
+        row = self.selected()
+        if row is None:
+            return
+        app, stack = row.data["app"], row.data["stack"]
+        if arg == "open" and len(stack) > 1 and app not in self.open_stacks:
+            self.open_stacks.add(app)
+        elif arg == "close" and app in self.open_stacks:
+            self.open_stacks.discard(app)
+        else:
+            return
+        self.panel.refresh_now(keep_selection=True)
+
+    def v_dismiss(self, _n, _a):
+        row = self.selected()
+        if row is None:
+            return
+        if not row.data["live"]:
+            self.set_status("that one isn't on screen (it's in the history)", kind="bad")
+            return
+        self.dismiss(row.data["n"])
+
+    def v_dismissall(self, _n, _a):
+        def go():
+            util.run(["makoctl", "dismiss", "-a"])
+            self.set_status("dismissed everything on screen", kind="ok")
+            self.refresh()
+        self.confirm("Dismiss every notification on screen?", go)
+
+    def v_restore(self, _n, _a):
+        code, _ = util.run(["makoctl", "restore"])
+        self.set_status("brought back the last one" if not code else "nothing to bring back", kind=None if not code else "bad")
+        self.refresh()
+
+    def v_copy(self, _n, arg):
+        row = self.selected()
+        if row is not None:
+            self.copy(row.data["n"], body_only=arg == "body")
+
+    def v_filter(self, _n, arg):
+        app = ""
+        if arg == "app":
+            row = self.selected()
+            if row is None:
+                return
+            app = row.data["app"] or "Other"
+        self.only = (arg, app)
+        self.set_status({"live": "showing only what's on screen", "history": "showing only the history",
+                         "app": f"showing only {app}", "": "showing everything"}[arg])
+        self.refresh()
 
 def when_day(t):
     a = datetime.datetime.fromtimestamp(t)

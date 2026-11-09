@@ -2,6 +2,16 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
+## v0.4.0 -- 2026-11-09
+
+- `Space u p` (show or hide the preview) now comes from Vyom core, which also remembers it per tool; the tool's own copy is gone.
+- **Vim keys** (Vyom 0.7, ADR 0008): NORMAL and INSERT modes, `Space` as the leader with a which-key strip, `?` and `Space ?` list every key, `Space Space` is a palette, counts (`5j`), `gg` / `G`, `H` / `L` for tabs. It opens in NORMAL, so stray typing changes nothing; `/` searches. Needs Vyom 0.7.0.
+- Its keys are data (`akashvani/vim.py`); `scripts/keybinds.py` writes the `# keybind:` lines and the README's key tables from them, and `--check` (CI) fails when they drift.
+- `h` / `l` fold and open an app's stack, `d d` dismisses (no question: it stays in the history), `u` brings back the last one, `y y` copies, `Space n n/o/h/t/a` do not disturb, `Space d a` dismisses everything on screen (asks first), `Space x 1..9` runs an action, `Space f l/h/a/c` filter live, history, one app or nothing, `Space y b` copies the body, `Space u p` hides the preview.
+- **Fixed**: `Ctrl+Backspace` dismissed every notification even while you typed in the search box; it's the box's word delete again (`Space d a` dismisses all, and asks).
+- `Ctrl+C` and `Delete` belong to the search box while typing.
+- A `Space f` filter ends when the panel closes; it no longer hid the history (or every other app) the next time it opened, with nothing saying so.
+
 ## v0.3.0 -- 2026-11-07
 
 - **Each app's notifications are one row** with a count, instead of a heading per app; Enter opens the
