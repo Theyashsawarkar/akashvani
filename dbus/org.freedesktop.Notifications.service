@@ -1,0 +1,7 @@
+# D-Bus activation: a notification sent before Vyom is running starts Vyom
+# (whose akashvani serves it), not mako. Copy to ~/.local/share/dbus-1/services/
+# (it's found before /usr/share's mako file there).
+[D-BUS Service]
+Name=org.freedesktop.Notifications
+Exec=/bin/sh -c 'exec "$HOME/.local/bin/vyom" daemon'
+SystemdService=vyom.service

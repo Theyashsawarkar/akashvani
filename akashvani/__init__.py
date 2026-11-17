@@ -1,6 +1,12 @@
-"""akashvani (आकाशवाणी, "notice"): notifications for Vyom, over mako.
+"""akashvani (आकाशवाणी, "voice from the sky"): the desktop's notifications.
 
-What's on screen now (urgent first, with the actions it offers, and
+It is the notification server itself (server.py: org.freedesktop.Notifications,
+inside the Vyom daemon, no extra process) and draws the popups (toast.py);
+this file is the panel. While another daemon (mako) holds the name, the panel
+reads that one through makoctl, as before (ADR 0005).
+
+The panel shows 
+what's on screen now (urgent first, with the actions it offers, and
 dismiss), then the history: each app's notifications stacked into one row
 with a count (Enter opens the stack), under Earlier today / Yesterday /
 Older. Every row has a time. The preview shows the whole message and its
@@ -8,10 +14,9 @@ actions as buttons (Alt+1..9). Do not disturb in the header: for an hour,
 till tomorrow morning or till you turn it off; a systemd timer (or a
 detached sleep) turns it off again, so it works with the panel closed.
 
-mako keeps no times, so akashvani notes them itself: it watches the
-session bus for Notify calls (a D-Bus monitor; only the app, the summary
-and the time are kept) and matches them to mako's ids; a notification it
-didn't see arrive gets the time it was first listed.
+Over mako, which keeps no times, akashvani notes them itself: it watches
+the session bus for Notify calls (a D-Bus monitor; only the app, the summary
+and the time are kept) and matches them to mako's ids.
 """
 import datetime
 import json
@@ -22,11 +27,13 @@ import threading
 import time
 
 from gi.repository import Gdk, Gio, GLib, Gtk, Pango
-
 from vyom import Hint, Row, Section, ui, util
 from vyom import Plugin as Base
 
 from . import vim
+from .server import DND_MODES as SERVER_DND
+from .server import Server
+from .toast import Toasts
 
 # KEYBINDS (generated from akashvani/vim.py by scripts/keybinds.py; don't edit by hand)
 # keybind: Vyom/akashvani:normal | Enter | Run the notification's default action (or open an app's stack, or copy it)
@@ -76,13 +83,15 @@ THEME = None   # the display's icon theme (set on the main loop; GTK 4's lookups
 
 
 def icon_of(n):
-    """The app's icon if the icon theme has it, else a bell glyph."""
-    ic = n.get("app_icon") or ""
-    if ic.startswith("file://"):
-        ic = ic[7:]
-    if ic.startswith("/") and os.path.exists(ic):
-        return Gio.FileIcon.new(Gio.File.new_for_path(ic))
-    for name in (ic, n.get("desktop_entry") or "", (n.get("app_name") or "").lower()):
+    """The notification's image or icon, else the app's (if the icon theme
+    has it), else a bell glyph."""
+    names = []
+    for ic in (n.get("image_path") or "", n.get("app_icon") or ""):
+        ic = ic.removeprefix("file://")
+        if ic.startswith("/") and os.path.exists(ic):
+            return Gio.FileIcon.new(Gio.File.new_for_path(ic))
+        names.append(ic)
+    for name in (*names, n.get("desktop_entry") or "", (n.get("app_name") or "").lower()):
         if name and not name.startswith("/") and THEME is not None and THEME.has_icon(name):
             return Gio.ThemedIcon.new(name)
     return "\U000f009a"
@@ -194,18 +203,35 @@ class Plugin(Base):
         self.held = 0
         self.today = 0
         self.times_lock = threading.Lock()
-        self.watch = Watch()
+        self.watch = None            # made on first need: only over mako
+        self.server = None
+        if conf.get("server", True) is not False:
+            self.server = Server(self)
+            self.server.toast = Toasts(self.server, vyom)
+            self.server.listeners.append(self.server_changed)
         global THEME
         try:
             THEME = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
         except TypeError:
             THEME = None
 
+    # --------------------------------------------------------------- the server
+    def own(self):
+        """True while akashvani is the notification server (else: mako)."""
+        return self.server is not None and self.server.owned
+
+    def server_changed(self):
+        """A notification came or went: an open panel follows at once."""
+        if self.panel is not None and self.panel.get_visible():
+            self.refresh()
+
     # --------------------------------------------------------------- do not disturb
     def dnd_on(self):
+        if self.own():
+            return self.server.dnd()
         if self.conf.get("dnd_status"):
             out = util.run(self.conf["dnd_status"])[1]
-            return re.search(self.conf.get("dnd_on_when", "^dnd$"), out, re.M) is not None
+            return re.search(self.conf.get("dnd_on_when", "^dnd$"), out, re.MULTILINE) is not None
         return "do-not-disturb" in util.run(["makoctl", "mode"])[1].split()
 
     def off_command(self):
@@ -215,6 +241,12 @@ class Plugin(Base):
         return [shutil.which("makoctl") or "makoctl", "mode", "-r", "do-not-disturb"]
 
     def switch_dnd(self, on):
+        if self.own():
+            if on:
+                self.server.add_mode("do-not-disturb")
+            else:
+                self.server.remove_mode(*SERVER_DND)
+            return
         if self.conf.get("dnd_on") and self.conf.get("dnd_off"):
             util.run(self.conf["dnd_on" if on else "dnd_off"])
         else:
@@ -241,7 +273,9 @@ class Plugin(Base):
     def set_dnd(self, mode):
         """Runs in the background: turn it on/off and (re)set the timer."""
         was_on = self.dnd_on()
-        if shutil.which("systemctl"):
+        if self.own():
+            self.server.dnd_off_at(0)
+        elif shutil.which("systemctl"):
             util.run(["systemctl", "--user", "stop", f"{UNIT}.timer"], timeout=5)
         until = 0
         if mode == "off":
@@ -261,6 +295,9 @@ class Plugin(Base):
     def schedule_off(self, seconds):
         """Turn do not disturb off in `seconds`, without the panel: a systemd
         user timer, else a detached sleep."""
+        if self.own():    # the server's own timer (it lives in the Vyom daemon)
+            self.server.dnd_off_at(time.time() + max(1, seconds))
+            return
         cmd = self.off_command()
         if shutil.which("systemd-run"):
             code, _ = util.run(["systemd-run", "--user", "--quiet", "--collect", f"--unit={UNIT}",
@@ -271,6 +308,10 @@ class Plugin(Base):
 
     def pick_dnd(self, mode):
         self.set_status("do not disturb: " + dict(DND_MODES)[mode].lower())
+        if self.own():    # no commands to wait for: on the main loop, now
+            self.set_dnd(mode)
+            self.refresh()
+            return
         self.background(lambda: self.set_dnd(mode), lambda _r: self.refresh())
 
     def header_extra(self):
@@ -322,6 +363,13 @@ class Plugin(Base):
         super().opened(args)
         self.dnd = self.read_dnd()
         self.show_dnd()
+        if self.server is not None and self.server.toast is not None:
+            self.server.toast.suspend(True)
+
+    def closed(self):
+        if self.server is not None and self.server.toast is not None:
+            self.server.toast.suspend(False)
+        super().closed()
 
     # --------------------------------------------------------------- times
     def stamp(self, notes):
@@ -348,10 +396,15 @@ class Plugin(Base):
 
     # --------------------------------------------------------------- search
     def search(self, q):
-        live = mako("list", "-j")
-        hist = mako("history", "-j")
+        if self.own():
+            live, hist = self.server.snapshot()
+        else:
+            if self.watch is None:
+                self.watch = Watch()
+            live = mako("list", "-j")
+            hist = mako("history", "-j")
+            self.stamp(live + hist)
         self.dnd = self.read_dnd()
-        self.stamp(live + hist)
         now = time.time()
         since = util.load_state(DND, {}).get("since") or 0
         self.held = sum(1 for n in live + hist if self.dnd[0] != "off" and since and n["t"] >= since)
@@ -408,6 +461,8 @@ class Plugin(Base):
         chips = []
         if urgent:
             chips.append(("Urgent", "red"))
+        if live and n.get("held"):
+            chips.append(("Held", "yellow"))
         if stack and len(stack) > 1:
             chips.append((("▾ " if opened else "") + str(len(stack)), "gray"))
         if stack and len(stack) > 1:
@@ -465,11 +520,17 @@ class Plugin(Base):
 
     # --------------------------------------------------------------- actions
     def invoke(self, n, key):
-        util.run(["makoctl", "invoke", "-n", str(n["id"]), key])
+        if self.own():
+            self.server.invoke(n["id"], key)
+        else:
+            util.run(["makoctl", "invoke", "-n", str(n["id"]), key])
         self.close()
 
     def dismiss(self, n):
-        util.run(["makoctl", "dismiss", "-n", str(n["id"])])
+        if self.own():
+            self.server.dismiss(n["id"])
+        else:
+            util.run(["makoctl", "dismiss", "-n", str(n["id"])])
         self.set_status("dismissed")
         self.panel.refresh_now(keep_selection=True)
 
@@ -548,13 +609,19 @@ class Plugin(Base):
 
     def v_dismissall(self, _n, _a):
         def go():
-            util.run(["makoctl", "dismiss", "-a"])
+            if self.own():
+                self.server.dismiss(every=True)
+            else:
+                util.run(["makoctl", "dismiss", "-a"])
             self.set_status("dismissed everything on screen", kind="ok")
             self.refresh()
         self.confirm("Dismiss every notification on screen?", go)
 
     def v_restore(self, _n, _a):
-        code, _ = util.run(["makoctl", "restore"])
+        if self.own():
+            code = 0 if self.server.restore() else 1
+        else:
+            code, _ = util.run(["makoctl", "restore"])
         self.set_status("brought back the last one" if not code else "nothing to bring back", kind=None if not code else "bad")
         self.refresh()
 

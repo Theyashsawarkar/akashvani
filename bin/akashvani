@@ -1,0 +1,243 @@
+#!/usr/bin/env python3
+"""akashvani: control the notification server from a shell (makoctl's
+commands and JSON, so scripts written for mako keep working).
+
+  akashvani list [-j]                 what's on screen now (held ones too)
+  akashvani history [-j] [--clear]    closed ones, newest first
+  akashvani count                     how many are in the history
+  akashvani dismiss [-n ID | -a]      dismiss the newest, one, or all
+  akashvani restore                   bring back the last dismissed one
+  akashvani invoke [-n ID] [ACTION]   run an action (default: "default")
+  akashvani menu [-n ID] PROG [ARGS]  pick an action with PROG (labels on
+                                      stdin, the pick on stdout), run it
+  akashvani mode [-s M... | -a M | -r M | -t M]
+                                      show / set / add / remove / toggle modes
+                                      (dnd and do-not-disturb hold popups,
+                                      silent mutes the sound)
+  akashvani status [-j]               server, modes, counts
+  akashvani reload                    re-read the popups' settings
+  akashvani doctor                    is akashvani the server? what's missing?
+
+While another daemon (mako) holds the notification name, every command is
+passed to makoctl when it's installed.
+"""
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+import gi
+
+gi.require_version("Gio", "2.0")
+from gi.repository import Gio, GLib
+
+NAME = "org.freedesktop.Notifications"
+CTL_PATH = "/dev/vayu/Akashvani"
+CTL_IFACE = "dev.vayu.Akashvani"
+DND = {"dnd", "do-not-disturb"}
+
+
+class NotServer(Exception):
+    pass
+
+
+def bus():
+    return Gio.bus_get_sync(Gio.BusType.SESSION, None)
+
+
+def call(method, args=None, reply="()"):
+    try:
+        r = bus().call_sync(NAME, CTL_PATH, CTL_IFACE, method, args, GLib.VariantType.new(reply),
+                            Gio.DBusCallFlags.NONE, 5000, None)
+    except GLib.Error as e:
+        if "UnknownObject" in e.message or "UnknownMethod" in e.message or "UnknownInterface" in e.message \
+                or "No such interface" in e.message or "No such object" in e.message:
+            raise NotServer(e.message)
+        sys.exit(f"akashvani: {e.message}")
+    return r.unpack()
+
+
+def owner():
+    try:
+        r = bus().call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+                            "GetNameOwner", GLib.Variant("(s)", (NAME,)), GLib.VariantType.new("(s)"),
+                            Gio.DBusCallFlags.NONE, 2000, None)
+        info = bus().call_sync(NAME, "/org/freedesktop/Notifications", NAME, "GetServerInformation", None,
+                               GLib.VariantType.new("(ssss)"), Gio.DBusCallFlags.NO_AUTO_START, 2000, None)
+        return r.unpack()[0], info.unpack()
+    except GLib.Error:
+        return None, None
+
+
+def j(method):
+    return json.loads(call(method, None, "(s)")[0])
+
+
+def opt(args, flag):
+    """The value after `flag` (removed from args), or None."""
+    if flag in args:
+        i = args.index(flag)
+        if i + 1 < len(args):
+            v = args[i + 1]
+            del args[i:i + 2]
+            return v
+        sys.exit(f"akashvani: {flag} needs a value")
+    return None
+
+
+def show(notes, as_json):
+    if as_json:
+        print(json.dumps(notes, indent=2, ensure_ascii=False))
+        return
+    for n in notes:
+        held = " (held)" if n.get("held") else ""
+        print(f"Notification {n['id']}: {n.get('summary') or ''}{held}")
+        if n.get("app_name"):
+            print(f"  App name: {n['app_name']}")
+        if n.get("body"):
+            print(f"  Body: {n['body']}")
+        print(f"  Urgency: {n.get('urgency')}")
+        for k, v in (n.get("actions") or {}).items():
+            print(f"  Action {k}: {v}")
+
+
+def newest_with_actions(nid):
+    live = j("List")
+    if nid:
+        return next((n for n in live if n["id"] == nid), None)
+    return next((n for n in live if n.get("actions")), None)
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__.strip())
+        return 0
+    if argv[0] in ("-v", "--version"):
+        _, info = owner()
+        print(f"akashvani {info[2] if info and info[0] == 'akashvani' else '(not running)'}")
+        return 0
+    cmd, args = argv[0], argv[1:]
+    as_json = "-j" in args
+    args = [a for a in args if a != "-j"]
+
+    if cmd == "doctor":
+        return doctor()
+    try:
+        return run(cmd, args, as_json)
+    except NotServer:
+        mako = shutil.which("makoctl")
+        if mako and cmd != "status":
+            os.execv(mako, [mako, *argv])
+        _, info = owner()
+        who = info[0] if info else "nothing"
+        sys.exit(f"akashvani: the notification server is {who}, not akashvani (akashvani doctor)")
+
+
+def run(cmd, args, as_json):
+    if cmd == "list":
+        show(j("List"), as_json)
+    elif cmd == "history":
+        if "--clear" in args:
+            call("ClearHistory")
+            return 0
+        show(j("History"), as_json)
+    elif cmd == "count":
+        print(len(j("History")))
+    elif cmd == "dismiss":
+        nid = opt(args, "-n")
+        ok = call("Dismiss", GLib.Variant("(ub)", (int(nid or 0), "-a" in args)), "(b)")[0]
+        return 0 if ok else 1
+    elif cmd == "restore":
+        return 0 if call("Restore", None, "(b)")[0] else 1
+    elif cmd == "invoke":
+        nid = int(opt(args, "-n") or 0)
+        n = newest_with_actions(nid)
+        if n is None:
+            return 1
+        return 0 if call("Invoke", GLib.Variant("(us)", (n["id"], args[0] if args else "default")), "(b)")[0] else 1
+    elif cmd == "menu":
+        nid = int(opt(args, "-n") or 0)
+        if not args:
+            sys.exit("akashvani: menu needs a program (e.g. akashvani menu vyom dmenu -p Action)")
+        n = newest_with_actions(nid)
+        if n is None or not n.get("actions"):
+            return 1
+        acts = n["actions"]
+        by_label = {}
+        for k, v in acts.items():
+            by_label.setdefault(v or k, k)
+        p = subprocess.run(args, check=False, input="\n".join(by_label) + "\n", capture_output=True, text=True)
+        pick = p.stdout.strip()
+        if p.returncode or pick not in by_label:
+            return 1
+        call("Invoke", GLib.Variant("(us)", (n["id"], by_label[pick])), "(b)")
+    elif cmd == "mode":
+        modes = set(call("Modes", None, "(as)")[0])
+        if not args:
+            print("\n".join(sorted(modes)))
+            return 0
+        flag, rest = args[0], args[1:]
+        if flag == "-s":
+            new = set(rest)
+        elif flag in ("-a", "-r", "-t") and len(rest) == 1:
+            m = rest[0]
+            new = modes | {m} if flag == "-a" or (flag == "-t" and m not in modes) else modes - {m}
+            if new - {"default"}:
+                new.discard("default")
+        else:
+            sys.exit("akashvani: mode [-s MODE... | -a MODE | -r MODE | -t MODE]")
+        now = call("SetModes", GLib.Variant("(as)", (sorted(new),)), "(as)")[0]
+        print("\n".join(now))
+    elif cmd == "status":
+        st = json.loads(call("Status", None, "(s)")[0])
+        if as_json:
+            print(json.dumps(st))
+        else:
+            dnd = "on" if st["dnd"] else "off"
+            print(f"on screen {st['live']} (held {st['held']}) · history {st['history']} · "
+                  f"modes {', '.join(st['modes'])} · do not disturb {dnd}")
+    elif cmd == "reload":
+        call("Reload")
+    else:
+        sys.exit(f"akashvani: unknown command {cmd} (akashvani --help)")
+    return 0
+
+
+def doctor():
+    ok = True
+    who, info = owner()
+    if info is None:
+        print("✗ nothing serves notifications (is Vyom running? systemctl --user status vyom)")
+        ok = False
+    elif info[0] == "akashvani":
+        print(f"✓ akashvani {info[2]} serves notifications ({who})")
+    else:
+        print(f"✗ {info[0]} {info[2]} holds the notification name; akashvani waits for it to exit")
+        print(f"  stop it: systemctl --user disable --now {info[0]}.service (or kill it)")
+        ok = False
+    for tool, why in (("notify-send", "to send test notifications"),
+                      ("pw-play", "for the notification sound (or paplay, aplay)")):
+        if not shutil.which(tool) and not (tool == "pw-play" and (shutil.which("paplay") or shutil.which("aplay"))):
+            print(f"· {tool} not found ({why})")
+    svc = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "dbus-1", "services")
+    found = []
+    for f in sorted(os.listdir(svc)) if os.path.isdir(svc) else []:
+        try:
+            with open(os.path.join(svc, f)) as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        if "Name=org.freedesktop.Notifications" in text and "vyom" in text:
+            found.append(f)
+    print(("✓ D-Bus starts Vyom when a notification arrives first (" + found[0] + ")") if found else
+          "· no D-Bus activation file: a notification sent before Vyom starts may start mako "
+          "(README: Install)")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except BrokenPipeError:
+        sys.exit(0)

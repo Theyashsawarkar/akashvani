@@ -16,7 +16,7 @@
 <!-- /identity -->
 
 <p align="center">
-  <b>Notifications (mako): what's on screen with its actions, each app's history stacked with times, a full preview, do not disturb for a while.</b><br>
+  <b>Your desktop's notifications: the notification server itself, with beautiful popups in your theme, rules, a history with times and do not disturb, and a keyboard-driven panel for all of it.</b><br>
   Notifications. A tool for <a href="https://github.com/Theyashsawarkar/vyom">Vyom</a>, keyboard-driven panels for Wayland.
 </p>
 
@@ -34,18 +34,40 @@
 <p align="center">
   <img alt="akashvani: an urgent battery notification on screen with a red Urgent chip, each app's notifications stacked with a count and a time, the preview with numbered action buttons, Copy and a red Dismiss; do not disturb with a duration in the header" src="assets/screenshots/akashvani.png" width="100%">
 </p>
+
+<p align="center">
+  <img alt="akashvani's popups: a chat message with the sender's picture and Reply / Mark as read buttons, a finished download with Open and Show in folder, an urgent battery warning framed in red, and a volume bar" src="assets/screenshots/popups.png" width="70%">
+</p>
 <p align="center"><sub>Screenshots use made-up demo notifications.</sub></p>
 
 > *Akashvani* (आकाशवाणी) is Sanskrit for "voice from the sky": the notices your apps send you.
 
-akashvani is notifications for [Vyom](https://github.com/Theyashsawarkar/vyom): one keyboard-driven panel that opens instantly, with live data, a preview and a key for everything. It runs on any compositor with the layer-shell protocol (sway, Hyprland, river, niri, Wayfire, labwc…). In [Vayu](https://github.com/Theyashsawarkar/vayu), the desktop it was built for, it replaces notification-history.py.
+akashvani is the notification system for [Vyom](https://github.com/Theyashsawarkar/vyom) desktops. It **is the notification server** (it replaces mako or dunst): apps send it notifications over the standard freedesktop D-Bus interface, and it draws them as glass cards in your theme's colours, keeps a history with times, holds them during do not disturb, and gives you one keyboard-driven panel for everything. It runs inside the Vyom daemon that's already resident, so it adds no process of its own. It runs on any compositor with the layer-shell protocol (sway, Hyprland, river, niri, Wayfire, labwc…). In [Vayu](https://github.com/Theyashsawarkar/vayu), the desktop it was built for, it replaced mako.
+
+```
+ apps (Firefox, Slack, notify-send, scripts)
+          │  org.freedesktop.Notifications  (D-Bus, the freedesktop spec)
+          ▼
+ ╭─ Vyom daemon (one resident GTK 4 process) ──────────────────────────╮
+ │  akashvani server ── rules ── modes (do not disturb, silent)        │
+ │     │      │                                                        │
+ │     │      ╰── history (with times, saved) ──╮                      │
+ │     ▼                                        ▼                      │
+ │  popups (layer-shell, glass cards)     the panel (vyom akashvani)   │
+ ╰──────────────▲──────────────────────────────────────────────────────╯
+                │  dev.vayu.Akashvani (D-Bus)
+        `akashvani` command (scripts, bars, keys)
+```
 
 ## Contents
 
 - [Features](#features)
 - [Install](#install)
 - [Usage](#usage)
+- [The command](#the-command)
 - [Configuration](#configuration)
+- [Rules](#rules)
+- [Styling](#styling)
 - [Troubleshooting](#troubleshooting)
 - [The Vyom family](#the-vyom-family)
 - [Contributing](#contributing)
@@ -53,30 +75,68 @@ akashvani is notifications for [Vyom](https://github.com/Theyashsawarkar/vyom): 
 
 ## Features
 
-- What's **on screen now**, urgent ones first with a red **Urgent** chip, with the actions each offers.
-- The history with **each app's notifications stacked into one row** with a count (Enter opens the stack), under Earlier today, Yesterday and Older.
-- **A time on every row** ("now", "2 min", "09:41"): akashvani notes when each notification arrives (mako keeps no times).
+**The popups**
+
+- **Glass cards in your theme**: rounded, blurred where the compositor blurs (SwayFX), in the colours of your theme (Vyom's `@base`, `@accent`, `@red`…), so a theme change restyles them too.
+- **What it means, at a glance**: urgent ones get a red frame and an Urgent chip, low ones stay quiet; a rule can tint an app's cards.
+- **The notification's image** (a contact's photo, a screenshot) or its icon, the app and the time, the title, the body with its bold, italics and links made safe.
+- **Actions are buttons on the card**; a click runs the default action, right click dismisses, middle click dismisses all.
+- **A bar for a value**: volume and brightness keys (and downloads) show one card that moves in place, never a pile, and stay out of the history.
+- **Hover holds a card** on screen; it slides in and out; more than `max_visible` wait behind a "+N more" pill (an urgent one never waits).
+- Every part has a CSS class, so you can restyle any of it ([Styling](#styling)).
+
+**The server**
+
+- The freedesktop notification spec (1.2): replacing a notification, actions, images, urgency, categories, sounds, resident and transient ones.
+- **Rules** per app, title, urgency, category or mode: how long it stays, hide it, mute it, keep it out of the history, tint it ([Rules](#rules)).
+- **Modes**: `dnd` / `do-not-disturb` hold popups (urgent ones still show) and mute sounds, `silent` only mutes; they survive a restart, and a timed do not disturb turns itself off.
+- **A history with times**, saved across restarts (200 by default).
+- **The `akashvani` command**, with makoctl's commands and JSON, so scripts and bars written for mako keep working ([The command](#the-command)).
+- Light: no process of its own (it lives in the resident Vyom daemon), one window for every popup, hidden when there are none.
+
+**The panel** (`vyom akashvani`)
+
+- What's on screen now, urgent ones first, held ones marked, with the actions each offers.
+- The history with **each app's notifications stacked into one row** with a count (Enter opens the stack), under Earlier today, Yesterday and Older, with a time on every row.
 - The preview shows the whole message and its **actions as buttons**, numbered `Alt+1..9`, with Copy and a red Dismiss.
-- **Do not disturb for an hour, till tomorrow morning, or till you turn it off**, in the header; a timer turns it off again even with the panel closed, and the panel says how many notifications it's holding.
+- **Do not disturb for an hour, till tomorrow morning, or till you turn it off**, in the header; the panel says how many notifications it's holding.
 - Keyboard first: every action has a key, shown in the footer; the mouse works too.
-- Never freezes the panel: slow commands run in the background.
 
 ## Install
 
 ### Requirements
 
-- [Vyom](https://github.com/Theyashsawarkar/vyom) 0.6.0 or newer (Python 3.11+, PyGObject, GTK 4, [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell), a Nerd Font)
-- `makoctl`
+- [Vyom](https://github.com/Theyashsawarkar/vyom) 0.7.0 or newer (Python 3.11+, PyGObject, GTK 4, [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell), a Nerd Font)
+- Optional: `pw-play` (PipeWire), `paplay` or `aplay` for a sound
 
 ### Install
 
 ```sh
 git clone https://github.com/Theyashsawarkar/akashvani ~/.local/share/vyom/plugins/akashvani
+ln -s ~/.local/share/vyom/plugins/akashvani/bin/akashvani ~/.local/bin/akashvani   # the command
 vyom reload           # pick it up (or log out and in)
-vyom akashvani            # open it; run it again to close
+vyom akashvani        # open the panel; run it again to close
 ```
 
-Give it a key in your compositor, e.g. sway:
+With [kosha](https://github.com/Theyashsawarkar/kosha): `kosha install akashvani` does all of it.
+
+**Make it your notification server.** Only one program can be, so stop the old one (mako, dunst, swaync) and remove it from your compositor's startup:
+
+```sh
+systemctl --user disable --now mako.service   # or: pkill mako; pkill dunst
+akashvani doctor                               # ✓ akashvani serves notifications
+```
+
+akashvani waits in line while another daemon holds the name and takes over the moment it exits; until then the panel reads mako through `makoctl`, as before.
+
+**Start it on the first notification.** If an app sends a notification before Vyom has started, D-Bus starts whichever daemon claims the name, which may be mako. This file makes it start Vyom instead:
+
+```sh
+mkdir -p ~/.local/share/dbus-1/services
+cp ~/.local/share/vyom/plugins/akashvani/dbus/org.freedesktop.Notifications.service ~/.local/share/dbus-1/services/
+```
+
+Give the panel a key in your compositor, e.g. sway:
 
 ```sh
 bindsym $mod+<key> exec vyom akashvani
@@ -86,7 +146,7 @@ bindsym $mod+<key> exec vyom akashvani
 
 ```sh
 git -C ~/.local/share/vyom/plugins/akashvani pull && vyom reload     # update
-rm -rf ~/.local/share/vyom/plugins/akashvani && vyom reload          # uninstall
+rm -rf ~/.local/share/vyom/plugins/akashvani && vyom reload          # uninstall (start mako again)
 ```
 
 ## Usage
@@ -137,25 +197,134 @@ Vyom's keys work too (every vim tool has them): `?` and `Space ?` list every key
 <!-- END KEYS -->
 
 
+## The command
+
+`akashvani` controls the server from a shell, a bar or a key. Its commands and JSON are makoctl's, so a script written for mako works with `makoctl` changed to `akashvani`; while mako still holds the name, `akashvani` passes every command to `makoctl`.
+
+| Command | What it does |
+|---|---|
+| `akashvani list [-j]` | What's on screen now (held ones too), newest first |
+| `akashvani history [-j]` | Closed ones, newest first; `--clear` empties it |
+| `akashvani count` | How many are in the history |
+| `akashvani dismiss [-n ID \| -a]` | Dismiss the newest, that one, or all |
+| `akashvani restore` | Bring back the last one you dismissed |
+| `akashvani invoke [-n ID] [ACTION]` | Run an action (`default` without one) |
+| `akashvani menu [-n ID] PROG [ARGS]` | Pick an action with a picker (`akashvani menu vyom dmenu -p Action`) |
+| `akashvani mode [-s M… \| -a M \| -r M \| -t M]` | Show, set, add, remove or toggle modes (`dnd`, `silent`, yours) |
+| `akashvani status [-j]` | On screen, held, history, modes |
+| `akashvani reload` | Re-read the popups' settings |
+| `akashvani doctor` | Is akashvani the server? What's missing? |
+
+The JSON has makoctl's keys (`id`, `app_name`, `app_icon`, `summary`, `body`, `urgency`, `actions`, `category`, `desktop_entry`) plus `t` (when it arrived), `held`, `value` and `image_path`. Bars can listen for the spec's `NotificationClosed` signal, and for `dev.vayu.Akashvani.Changed` (modes).
+
 ## Configuration
 
-Everything is optional, in `~/.config/vyom/config.toml` under `[plugin.akashvani]`:
+Everything is optional, in `~/.config/vyom/config.toml` under `[plugin.akashvani]`; run `vyom reload` after editing.
+
+**The popups**
 
 | Setting | Default | What it does |
 |---|---|---|
-| `dnd_status` | (makoctl mode) | Command printing the current mode |
-| `dnd_on_when` | ^dnd$ | Regex: do not disturb is on |
-| `dnd_on / dnd_off` | (makoctl mode -a/-r) | Commands to turn it on / off |
+| `position` | `top-right` | `top-right`, `top-left`, `top-center`, `bottom-right`, `bottom-left`, `bottom-center` or `center` |
+| `margin_x` / `margin_y` | 16 / 12 | Distance from the screen's edges (px) |
+| `width` | 380 | A card's width (px) |
+| `gap` | 10 | Between cards (px) |
+| `max_visible` | 3 | Cards at once; the rest wait behind "+N more" |
+| `icon_size` | 44 | The image or icon tile (px) |
+| `body_lines` | 4 | Lines of body before "…" |
+| `max_actions` | 3 | Action buttons on a card |
+| `show_app` / `show_time` / `show_actions` / `show_fallback_icon` | true | Parts of a card you can turn off |
+| `animation` | `slide` | `slide`, `fade` or `none` |
+| `animation_ms` | 220 | How long it takes |
+| `layer` | `top` | `top` (over windows, under Vyom's panels) or `overlay` (over fullscreen windows too) |
+
+**Timing, sound, history**
+
+| Setting | Default | What it does |
+|---|---|---|
+| `timeout` | 5000 | ms a normal one stays (when the app doesn't say) |
+| `timeout_low` | 3000 | ms for low urgency |
+| `timeout_critical` | 0 | ms for urgent ones (0: till you dismiss it) |
+| `timeout_actions` | 8000 | At least this long when it has actions |
+| `ignore_timeout` | false | Ignore how long the app asks for |
+| `sound` | (none) | A sound file played for every notification (not in `silent` or `dnd`) |
+| `sound_command` | (pw-play, paplay, aplay) | Plays it: the file is added at the end |
+| `history_max` | 200 | Notifications kept in the history |
+| `history_sync` | false | Keep volume / brightness sliders in the history too |
 | `dnd_morning` | 08:00 | When "till tomorrow" ends |
+| `server` | true | `false`: don't serve notifications, only the panel over another daemon (makoctl) |
 
-A timed do not disturb is a systemd user timer (`systemctl --user list-timers akashvani-dnd-off.timer`), or a detached `sleep` without systemd.
+Over another daemon (`server = false`, or while mako still runs), `dnd_status`, `dnd_on_when`, `dnd_on` and `dnd_off` are the commands the panel uses for do not disturb (default: makoctl's modes).
 
-Run `vyom reload` after editing.
+## Rules
+
+Rules change what happens to some notifications. Each `[[plugin.akashvani.rules]]` has match keys (all must fit) and what to do; every matching rule applies, in order, a later one winning.
+
+| Match | Fits when |
+|---|---|
+| `app`, `summary`, `body`, `category`, `desktop_entry` | The regex is found in it (case doesn't matter) |
+| `urgency` | `low`, `normal` or `critical` |
+| `mode` | That mode is on (`dnd`, `silent`, yours) |
+| `actionable` | It has actions (true / false) |
+| `sync` | It's a slider that changes in place (volume, brightness) |
+
+| Do | What |
+|---|---|
+| `timeout` | ms it stays (0: till you dismiss it) |
+| `hidden` | No popup (it's held: in the panel and the history) |
+| `ignore` | Drop it entirely |
+| `sound` | A sound file, or `false` for none |
+| `history` | false: keep it out of the history; true: keep it even if transient |
+| `urgency` | Treat it as `low`, `normal` or `critical` |
+| `show_in_dnd` | Show it even in do not disturb |
+| `color` | Tint its card: `red`, `peach`, `yellow`, `green`, `teal`, `sky`, `blue`, `mauve`, `pink`, `lavender` |
+| `class` | Extra CSS classes for its card (your own styles) |
+
+```toml
+[[plugin.akashvani.rules]]     # the battery warning stays till you deal with it
+app = "batsignal"
+timeout = 0
+
+[[plugin.akashvani.rules]]     # chat in green, and never in the history
+app = "Slack|Telegram"
+color = "green"
+history = false
+
+[[plugin.akashvani.rules]]     # your phone's calls break through do not disturb
+category = "call"
+show_in_dnd = true
+```
+
+## Styling
+
+The popups are GTK 4 widgets styled by `style.css` in this repo, in your theme's colours. Anything in `~/.config/vyom/style.css` overrides it:
+
+| Class | Is |
+|---|---|
+| `window.akashvani-toasts` | The popups' window (transparent) |
+| `.akv-card` | A card; also `.u-low` / `.u-normal` / `.u-critical`, `.app-<name>` (e.g. `.app-firefox`), `.akv-osd` (a slider), `.tint-<colour>`, a rule's `class` |
+| `.akv-icon` | The image / icon tile (`.glyph-tile` when it's the bell) |
+| `.akv-app`, `.akv-time`, `.akv-urgent` | The line above the title |
+| `.akv-summary`, `.akv-body` | The title and the body |
+| `progressbar.akv-progress`, `.akv-value` | A value's bar and its number |
+| `button.akv-action` (`.first`), `button.akv-close` | Action buttons, the close button (shows on hover) |
+| `button.akv-more` | The "+N more" pill |
+
+```css
+/* square-ish cards with a solid background, Firefox's in peach */
+.akv-card { border-radius: 12px; background-color: @base; }
+.akv-card.app-firefox { border-color: @peach; }
+.akv-summary { font-size: 15px; }
+```
+
+On SwayFX, blur the popups with `layer_effects "notifications" { blur enable; blur_ignore_transparent enable; corner_radius 20 }`.
 
 ## Troubleshooting
 
 - **Nothing opens.** `vyom list` shows every installed tool, and why one is skipped (a missing requirement, or a Vyom that's too old).
 - **It opened, then something failed.** Look for a `Traceback` in the daemon's log, `journalctl --user -u vyom -u vyom-daemon -b` (without systemd: `~/.local/state/vyom/daemon.log`), and [open an issue](https://github.com/Theyashsawarkar/akashvani/issues/new/choose) with it.
+- **Notifications still look like mako's (or nothing shows).** Another daemon holds the name: `akashvani doctor` says which, and how to stop it.
+- **No popups, but they're in the panel.** Do not disturb is on (`akashvani mode`), or a rule hides them; `akashvani status` says how many are held.
 - **No blur or rounded corners.** That's the compositor: on SwayFX, add `layer_effects "vyom" { blur enable; corner_radius 20; shadows enable }`.
 
 ## The Vyom family

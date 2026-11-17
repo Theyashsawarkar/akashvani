@@ -1,8 +1,8 @@
 name = "akashvani"
 title = "Notifications"
-description = "Notifications (mako): what's on screen with its actions, each app's history stacked with times, a full preview, do not disturb for a while."
-version = "0.4.0"
+description = "The desktop's notifications: the server itself (beautiful popups in your theme, rules, history with times, do not disturb) and its panel, with each app's history stacked."
+version = "0.5.0"
 vyom = "0.7.0"
 icon = "󰂚"
 color = "red"
-requires = ["makoctl"]
+requires = []

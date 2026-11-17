@@ -2,6 +2,19 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
+## v0.5.0 -- 2026-11-17
+
+- **akashvani is the notification server now** (it replaces mako): it implements the freedesktop notification spec and draws its own popups, inside the Vyom daemon that's already running, so no new process (ADR 0005).
+- **Popups in your theme**: glass cards with the image or icon, app and time, title, body (its markup made safe), action buttons, and a bar for volume / brightness that moves in place. Urgent ones are framed red; hover holds a card; click runs the default action, right click dismisses, middle click dismisses all; more than `max_visible` wait behind "+N more". They slide in and out.
+- **Everything is configurable**: position, size, margins, gap, timeouts per urgency, animation, layer, sound, what a card shows; every part has a CSS class to restyle it.
+- **Rules** (`[[plugin.akashvani.rules]]`): by app, title, body, urgency, category, mode, actions or slider; set the timeout, hide, ignore, mute, keep out of the history, change the urgency, show in do not disturb, tint the card, add a CSS class.
+- **Modes**: `dnd` / `do-not-disturb` hold popups (urgent ones still show) and mute; `silent` mutes. They survive a restart; a timed do not disturb is the daemon's own timer.
+- **The history is akashvani's own**, with exact times, saved across restarts (`history_max`); volume and brightness sliders stay out of it.
+- **The `akashvani` command**: `list`, `history`, `count`, `dismiss`, `restore`, `invoke`, `menu`, `mode`, `status`, `reload`, `doctor`, with makoctl's JSON, so mako scripts work by renaming the command; it passes commands to makoctl while mako still holds the name.
+- The panel updates the moment a notification comes or goes, marks held ones, and shows each notification's image; the popups step aside while it's open.
+- `dbus/org.freedesktop.Notifications.service`: D-Bus starts Vyom (not mako) when a notification arrives before it.
+- No longer needs makoctl. While mako runs, akashvani waits for it and the panel works over mako as before; `server = false` keeps it that way.
+
 ## v0.4.0 -- 2026-11-09
 
 - `Space u p` (show or hide the preview) now comes from Vyom core, which also remembers it per tool; the tool's own copy is gone.

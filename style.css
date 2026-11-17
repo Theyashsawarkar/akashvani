@@ -1,0 +1,83 @@
+/* akashvani: the panel's bits, and the notification popups (toast.py).
+   Every popup part has a class; ~/.config/vyom/style.css can restyle any of
+   it (README "Styling"). Colours are the theme's (@base, @accent, @red...). */
+
+/* ---- the panel ---- */
+.dnd button.seg { font-size: 11.5px; padding: 3px 9px; }
+
+/* ---- popups ---- */
+window.akashvani-toasts { background: transparent; }
+
+.akv-card {
+  border-radius: 20px;
+  padding: 14px 16px 14px 14px;
+  background-color: alpha(@base, 0.84);
+  background-image: linear-gradient(to bottom, alpha(white, 0.07), alpha(white, 0) 45%);
+  border: 1px solid alpha(@accent, 0.30);
+  color: @text;
+  font-family: "Inter", "Noto Sans", sans-serif;
+  font-size: 13px;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.akv-card:hover { border-color: alpha(@accent, 0.65); background-color: alpha(@base, 0.92); }
+
+/* what it means, at a glance: urgent is red, low is quiet */
+.akv-card.u-critical {
+  box-shadow: inset 0 0 0 1px alpha(@red, 0.35);
+  border-color: @red;
+  background-image: linear-gradient(to bottom, alpha(@red, 0.14), alpha(@red, 0.02) 60%);
+}
+.akv-card.u-low { border-color: alpha(white, 0.10); }
+.akv-card.u-low .akv-summary { font-weight: 500; }
+
+/* a rule's tint: color = "green" */
+.akv-card.tint-red      { border-color: alpha(@red, 0.70); }
+.akv-card.tint-peach    { border-color: alpha(@peach, 0.70); }
+.akv-card.tint-yellow   { border-color: alpha(@yellow, 0.70); }
+.akv-card.tint-green    { border-color: alpha(@green, 0.70); }
+.akv-card.tint-teal     { border-color: alpha(@teal, 0.70); }
+.akv-card.tint-sky      { border-color: alpha(@sky, 0.70); }
+.akv-card.tint-blue     { border-color: alpha(@blue, 0.70); }
+.akv-card.tint-mauve    { border-color: alpha(@mauve, 0.70); }
+.akv-card.tint-pink     { border-color: alpha(@pink, 0.70); }
+.akv-card.tint-lavender { border-color: alpha(@lavender, 0.70); }
+
+.akv-icon { border-radius: 13px; background: alpha(white, 0.05); }
+.akv-icon.glyph-tile { background: alpha(@accent, 0.14); }
+.akv-glyph { font-family: "JetBrainsMono Nerd Font"; font-size: 20px; color: @accent; }
+.u-critical .akv-icon.glyph-tile { background: alpha(@red, 0.16); }
+.u-critical .akv-glyph { color: @red; }
+
+.akv-app { color: @subtext0; font-size: 11.5px; font-weight: 600; }
+.akv-time { color: @overlay0; font-size: 11px; font-family: "JetBrainsMono Nerd Font"; }
+.akv-urgent { color: @red; background: alpha(@red, 0.15); border-radius: 7px; padding: 0 7px;
+  font-size: 10.5px; font-weight: 700; }
+.akv-summary { color: @text; font-size: 14px; font-weight: 700; }
+.akv-body { color: @subtext0; font-size: 12.5px; }
+
+/* the close button shows when you point at the card */
+button.akv-close { background-image: none; min-width: 22px; min-height: 22px; padding: 0; border-radius: 11px;
+  background: none; border: none; box-shadow: none; color: @overlay1;
+  font-family: "JetBrainsMono Nerd Font"; font-size: 13px; opacity: 0; transition: opacity 140ms ease; }
+.akv-card:hover button.akv-close { opacity: 1; }
+button.akv-close:hover { background: alpha(@red, 0.18); color: @red; }
+
+/* volume, brightness, a download */
+progressbar.akv-progress trough { min-height: 6px; border-radius: 4px; background: alpha(white, 0.08); border: none; }
+progressbar.akv-progress progress { min-height: 6px; border-radius: 4px; background: @accent; border: none; }
+.akv-value { color: @subtext1; font-size: 12px; font-family: "JetBrainsMono Nerd Font"; min-width: 38px; }
+.akv-osd .akv-summary { font-size: 13px; }
+
+/* actions */
+.akv-actions { margin-top: 2px; }
+button.akv-action { background-image: none; padding: 6px 12px; border-radius: 11px; font-size: 12.5px; font-weight: 600;
+  background: alpha(white, 0.06); color: @text; border: 1px solid alpha(white, 0.08); box-shadow: none; }
+button.akv-action:hover { background: alpha(white, 0.12); }
+button.akv-action.first { background: alpha(@accent, 0.18); color: @accent; border-color: alpha(@accent, 0.35); }
+button.akv-action.first:hover { background: alpha(@accent, 0.28); }
+.u-critical button.akv-action.first { background: alpha(@red, 0.18); color: @red; border-color: alpha(@red, 0.4); }
+
+/* more waiting behind the ones on screen */
+button.akv-more { background-image: none; padding: 3px 12px; border-radius: 11px; font-size: 11.5px; font-weight: 600; min-height: 0;
+  background-color: alpha(@base, 0.84); color: @subtext0; border: 1px solid alpha(@accent, 0.25); box-shadow: none; }
+button.akv-more:hover { color: @text; border-color: alpha(@accent, 0.6); }

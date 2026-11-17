@@ -1,6 +1,6 @@
 # 3. Use mako's history and modes
 
-**Status:** Accepted  
+**Status:** Superseded by [0005](0005-be-the-notification-server.md)  
 **Date:** 2026-10-19
 
 ## Context
