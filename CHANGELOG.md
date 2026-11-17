@@ -4,10 +4,17 @@ Newest first. Releases are tags (`vX.Y.Z`).
 
 ## Unreleased
 
+- **More room**: a clear gap between a card's title and its message (they touched), and between the older lines of a grouped card, which now say who and what ("Om · 5 missed calls", not just "Om").
+- **No timer on a ringing call**: it counted how long it had rung, which read as the call's length; the "ringing" tag says it.
+- A missed call has its second line too: the number (masked, as on the ringing card) and "missed call"; it was just the name over an empty space.
+- **Every toast is the same size**: one line of title and at most two of message (cut with "…"), in a text block of one height, so a short one is as tall as a long one; a shared card adds one line for the rest ("Om · 4 missed calls, and 1 more"). Padding is the same all round (16 px top and bottom, 18 px at the sides), 10 px between cards.
 - **Every toast is the same width** (the `width` setting, 420 px here): a long title or message used to widen the card to its whole line; now it wraps inside (two lines of title, `body_lines` of body, then "…").
 - **No time-left line** at the bottom of a toast: every card ends the same.
+- **A missed call hides like the rest** after `timeout_missed` (10 s); it stays in the panel. Only a ringing call stays on screen.
 - **A missed call says how to be done with it**: **Dismiss** (and **Call back** from ekatva), and its × always shows (it waits for you, so it looked stuck).
 - **An incoming call: Answer on the left, Reject on the right**, as on a phone.
+- The handset on a call card faces the way phones draw it (earpiece top left; our own `call-symbolic`, Adwaita's is mirrored), like ekatva's popup, phone app and bar.
+- A video call says so: its tag reads "video call", and its icon and Answer button show a video camera facing right (our own `video-call-symbolic`, Adwaita's faces left) instead of the receiver (ekatva's `x-ekatva-video`).
 
 - New popup design (ADR 0006): content first, a quiet line with the app's small
   icon, name and time; paths, branches and code in mono; a picture only when

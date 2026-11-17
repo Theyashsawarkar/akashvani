@@ -63,6 +63,8 @@ button.akv-close:hover { background: alpha(@red, 0.16); color: @red; }
 
 /* the content */
 .akv-content { margin-top: 10px; }
+/* The title and two lines of message, in a block of one height: every card the same size. */
+.akv-text { min-height: 62px; }
 .akv-summary { color: @text; font-size: 14.5px; font-weight: 650; }
 .akv-body { color: mix(@subtext0, @text, 0.35); font-size: 13.5px; }
 .akv-avatar { border-radius: 999px; }

@@ -233,13 +233,13 @@ Everything is optional, in `~/.config/vyom/config.toml` under `[plugin.akashvani
 | `gap` | 10 | Between cards (px) |
 | `max_visible` | 3 | Cards at once; the rest wait behind "N more waiting" (calls and urgent ones never wait) |
 | `group` | true | Several from one app share one card: the newest in full, older ones as a line each |
-| `group_lines` | 2 | Older lines on a shared card |
+| `group_lines` | 1 | (one line now: the newest older one, "and N more") |
 | `keys` | true | The newest card has the focus, and `akashvani key` acts on it |
 | `copy_codes` | true | A one-time code in a notification (OTP, login code) gets a Copy code button |
 | `call_timeout` | 120000 | ms a call card stays if the phone never says the call ended |
 | `calls_in_dnd` | true | A phone call (ekatva) rings through do not disturb |
 | `dnd_summary` | true | When do not disturb ends, one card says what came in, instead of each one |
-| `body_lines` | 3 | Lines of body before "…" |
+| `body_lines` | 2 | Lines of body before "…" (the title is one line; every card is one height) |
 | `max_actions` | 3 | Action buttons on a card |
 | `show_time` / `show_actions` | true | Parts of a card you can turn off |
 | `animation` | `slide` | `slide`, `fade` or `none` |
@@ -255,6 +255,7 @@ Everything is optional, in `~/.config/vyom/config.toml` under `[plugin.akashvani
 | `timeout_critical` | 0 | ms for urgent ones (0: till you dismiss it) |
 | `timeout_actions` | 8000 | At least this long when it has actions |
 | `ignore_timeout` | false | Ignore how long the app asks for |
+| `timeout_missed` | 10000 | ms a missed call stays on screen (it stays in the panel); 0: till you dismiss it |
 | `sound` | (none) | A sound file played for every notification (not in `silent` or `dnd`) |
 | `sound_command` | (pw-play, paplay, aplay) | Plays it: the file is added at the end |
 | `history_max` | 200 | Notifications kept in the history |

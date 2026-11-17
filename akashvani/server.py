@@ -102,7 +102,7 @@ XML = """
 # The keys a notification has in `list -j` / `history -j` (makoctl's shape,
 # so scripts written for mako keep working), plus ours.
 PUBLIC = ("id", "app_name", "app_icon", "category", "desktop_entry", "summary", "body", "urgency", "actions",
-          "t", "value", "image_path", "resident", "transient", "kind", "via", "contact")
+          "t", "value", "image_path", "resident", "transient", "kind", "via", "contact", "video")
 
 
 def _str(v):
@@ -378,7 +378,9 @@ class Server:
             # (it went offline), it can't hang on screen for ever
             return max(0, int(self.opt("call_timeout", 120000)))
         if n.get("kind") == "missed":
-            return 0      # a call you meant to see: till you act on it
+            # It hides like the rest (only a ringing call waits for you); it
+            # stays in the panel's history, and the bell counts it.
+            return max(0, int(self.opt("timeout_missed", 10000)))
         if asked > 0 and not self.opt("ignore_timeout", False):
             return asked
         if asked == 0 and not self.opt("ignore_timeout", False):
@@ -793,6 +795,8 @@ def classify(n, hints):
         else:
             kind = "share"
     n["via"] = dev
+    if _str(hints.get("x-ekatva-video")):
+        n["video"] = True     # a video call: the card says so
     if kind == "missed":    # it waits for you: say how to be done with it
         n["actions"]["akv:dismiss"] = "Dismiss"
     icon = _str(hints.get("x-ekatva-icon"))

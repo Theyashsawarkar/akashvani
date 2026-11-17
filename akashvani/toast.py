@@ -63,7 +63,10 @@ def mono_font():
     return _mono_cache["font"]
 # kinds that share a card per app (calls, urgent ones and sliders never do)
 GROUPABLE = ("normal", "phone", "sms", "share")
-SYMBOLIC_DIRS = ("/usr/share/icons/Adwaita/symbolic", "/usr/share/icons/hicolor/symbolic")
+# Our own first (call, video-call: the handset and the camera as phones draw
+# them, Adwaita's are mirrored), then Adwaita's.
+SYMBOLIC_DIRS = (os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "icons", "symbolic"),
+                 "/usr/share/icons/Adwaita/symbolic", "/usr/share/icons/hicolor/symbolic")
 
 # what reads as code in a body: `backticks`, paths, file:line, branches
 _CODEISH = re.compile(
@@ -691,10 +694,9 @@ class Lane:
         if count > 1:
             row.append(_label(str(count), "akv-count"))
         row.append(Gtk.Box(hexpand=True))
-        if n["kind"] == "call":
-            sl.ring = _label("0:00", "akv-time")
-            row.append(sl.ring)
-        elif self.opt("show_time", True):
+        # A ringing call has no clock: the "ringing" tag says it all (it counted
+        # how long it had rung, which read as a call's length).
+        if n["kind"] != "call" and self.opt("show_time", True):
             t = _label(ago(n["t"]), "akv-time")
             sl.time_labels.append((t, n))
             row.append(t)
@@ -708,7 +710,7 @@ class Lane:
 
     def tag(self, n):
         if n["kind"] == "call":
-            return ("ringing", "green")
+            return ("video call" if n.get("video") else "ringing", "green")
         if n["kind"] == "missed":
             return ("missed", "red")
         if n["urgency"] == "critical":
@@ -729,15 +731,26 @@ class Lane:
         if pic is None and person and n.get("contact"):
             pic = self.initials(n["contact"], 38)
         if pic is not None:
+            pic.set_valign(Gtk.Align.START)
             row.append(pic)
-        col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3, hexpand=True, valign=Gtk.Align.CENTER)
+        # A clear gap between the title and its message: they never touch.
+        # Every card the same size: one line of title, at most two of message,
+        # each cut with "…", in a block of fixed height (a short one is as tall
+        # as a long one).
+        col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, hexpand=True, valign=Gtk.Align.START)
+        col.add_css_class("akv-text")
         title = n.title or n["summary"] or n["app_name"] or "Notification"
-        col.append(_label(title, "akv-summary", lines=2))
+        col.append(_label(title, "akv-summary", lines=1))
         body = safe_markup(n.get("body") or "", n.code)
+        if n["kind"] == "missed" and not body.strip():
+            # A missed call's second line: the number (masked, as on the ringing
+            # card) and what it was, like WhatsApp's own "5 missed calls".
+            num = mask_number(n.get("number") or "")
+            body = GLib.markup_escape_text(f"{num} · missed call" if num else "Missed call")
         if "value" in n and re.fullmatch(r"\s*%d\s*%%?\s*" % n["value"], body):
             body = ""
         if body.strip():
-            col.append(_label(body.strip(), "akv-body", markup=True, lines=int(self.opt("body_lines", 3))))
+            col.append(_label(body.strip(), "akv-body", markup=True, lines=int(self.opt("body_lines", 2))))
         if "value" in n:
             bar = Gtk.ProgressBar(fraction=n["value"] / 100, hexpand=True, valign=Gtk.Align.CENTER)
             bar.add_css_class("akv-progress")
@@ -748,21 +761,19 @@ class Lane:
         row.append(col)
         card.append(row)
 
-        if len(sl.notes) > 1:              # older ones from this app, a line each
-            older = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        if len(sl.notes) > 1:              # older ones from this app: one line, always
+            older = Gtk.Box(spacing=10)
             older.add_css_class("akv-older")
-            shown = int(self.opt("group_lines", 2))
-            for x in sl.notes[1:1 + shown]:
-                line = Gtk.Box(spacing=10)
-                text = x.title or x["summary"] or ""
-                line.append(_label(text, "akv-older-text", hexpand=True, ellipsize=Pango.EllipsizeMode.END))
-                t = _label(ago(x["t"]), "akv-older-time")
-                sl.time_labels.append((t, x))
-                line.append(t)
-                older.append(line)
-            extra = len(sl.notes) - 1 - shown
+            x = sl.notes[1]
+            body = re.sub(r"<[^>]+>", "", x.get("body") or "").strip()
+            text = " · ".join(t for t in (x.title or x["summary"] or "", body) if t)
+            extra = len(sl.notes) - 2
             if extra > 0:
-                older.append(_label(f"{extra} more in the panel", "akv-older-text"))
+                text += f", and {extra} more"
+            older.append(_label(text, "akv-older-text", hexpand=True, ellipsize=Pango.EllipsizeMode.END))
+            t = _label(ago(x["t"]), "akv-older-time")
+            sl.time_labels.append((t, x))
+            older.append(t)
             card.append(older)
 
         btns = self.buttons(n)
@@ -781,7 +792,8 @@ class Lane:
             cap = str(i + 1)
             if n["kind"] == "call" and k == "answer":
                 b.add_css_class("answer")
-                inner.append(self.symbolic("call-start-symbolic", 15))
+                # A video call answers with a camera: easy to tell at a glance.
+                inner.append(self.symbolic("video-call-symbolic" if n.get("video") else "call-symbolic", 15))
                 cap = "⏎"
             elif n["kind"] == "call" and k == "reject":
                 b.add_css_class("decline")
@@ -897,8 +909,10 @@ class Lane:
 
     def app_icon(self, n, size=16):
         """The small icon on the meta line."""
-        kind_icon = {"call": "call-start-symbolic", "missed": "call-missed-symbolic", "sms": "mail-unread-symbolic",
+        kind_icon = {"call": "call-symbolic", "missed": "call-missed-symbolic", "sms": "mail-unread-symbolic",
                      "share": "phone-symbolic"}.get(n["kind"])
+        if n["kind"] == "call" and n.get("video"):
+            kind_icon = "video-call-symbolic"
         if kind_icon:
             img = self.symbolic(kind_icon, size - 4 if size > 14 else size, quiet=True)
             if img is not None:
