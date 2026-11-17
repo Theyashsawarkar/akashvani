@@ -2,6 +2,46 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
+## Unreleased
+
+- **Every toast is the same width** (the `width` setting, 420 px here): a long title or message used to widen the card to its whole line; now it wraps inside (two lines of title, `body_lines` of body, then "…").
+- **No time-left line** at the bottom of a toast: every card ends the same.
+- **A missed call says how to be done with it**: **Dismiss** (and **Call back** from ekatva), and its × always shows (it waits for you, so it looked stuck).
+- **An incoming call: Answer on the left, Reject on the right**, as on a phone.
+
+- New popup design (ADR 0006): content first, a quiet line with the app's small
+  icon, name and time; paths, branches and code in mono; a picture only when
+  the notification brings one; buttons with their keys; a hairline for the
+  time left, stopped while you point at the card. No icon tiles, glow or
+  gradients.
+- Kinds of card: urgent (a red rail and a tag in words), a phone call from
+  ekatva (the caller, a pulsing ring, Decline and Answer, on top till it's
+  handled), missed calls, texts and the phone's own apps ("WhatsApp on
+  Pixel 8"), and sliders as one slim line.
+- Several from one app share one card (`group`, `group_lines`).
+- Keys: the newest card has the focus; `akashvani key enter|1|2|3|dismiss|
+  next|dismiss-all` acts on it (answer or decline a call without the mouse).
+- A one-time code gets Copy code (`copy_codes`).
+- When do not disturb ends, one card says what came in (`dnd_summary`);
+  calls ring through it (`calls_in_dnd`).
+- The theme decides: colours by name (light themes make light cards), and
+  with varna its glass, fonts and corner radius.
+- One card per phone call: a second "ringing" for the same call (Android sends
+  one without the number, then one with it) joins the first, keeping its id
+  and the caller's name; a call card leaves after `call_timeout` (2 min) if
+  the phone never says the call ended.
+- Roomier cards: 16-18 px inside, a 10 px gap between them.
+- notify-send's `-i NAME` icons show (libnotify sends them as image-path).
+- `osd_position`: sliders (volume, brightness) can sit apart from the other
+  notifications, e.g. notifications top-center under the bar's clock and
+  sliders top-right; any setting can be given again with `osd_` for them.
+- A slider card is aligned: no empty header row pushing its title and bar
+  below the icon, and the bar keeps one length whatever the number.
+- "Dismiss all" no longer brings back a card that was waiting to show.
+- A notification's picture (image-data) stays in the history.
+- The panel counts held notifications when do not disturb was turned on
+  from the command line or a script.
+
 ## v0.5.0 -- 2026-11-17
 
 - **akashvani is the notification server now** (it replaces mako): it implements the freedesktop notification spec and draws its own popups, inside the Vyom daemon that's already running, so no new process (ADR 0005).

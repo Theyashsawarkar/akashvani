@@ -211,6 +211,7 @@ Vyom's keys work too (every vim tool has them): `?` and `Space ?` list every key
 | `akashvani invoke [-n ID] [ACTION]` | Run an action (`default` without one) |
 | `akashvani menu [-n ID] PROG [ARGS]` | Pick an action with a picker (`akashvani menu vyom dmenu -p Action`) |
 | `akashvani mode [-s M… \| -a M \| -r M \| -t M]` | Show, set, add, remove or toggle modes (`dnd`, `silent`, yours) |
+| `akashvani key KEY` | Act on the focused popup: `enter` (its main action; answers a call), `1` `2` `3` (its buttons), `dismiss` (declines a call), `next` (focus the next card), `dismiss-all` |
 | `akashvani status [-j]` | On screen, held, history, modes |
 | `akashvani reload` | Re-read the popups' settings |
 | `akashvani doctor` | Is akashvani the server? What's missing? |
@@ -227,13 +228,20 @@ Everything is optional, in `~/.config/vyom/config.toml` under `[plugin.akashvani
 |---|---|---|
 | `position` | `top-right` | `top-right`, `top-left`, `top-center`, `bottom-right`, `bottom-left`, `bottom-center` or `center` |
 | `margin_x` / `margin_y` | 16 / 12 | Distance from the screen's edges (px) |
-| `width` | 380 | A card's width (px) |
+| `osd_position` | (none) | Where sliders go (a `value` hint or a sync tag: volume, brightness), when they should sit apart from the rest, e.g. notifications `top-center` under the bar's clock and sliders `top-right`. Any other setting can be given again with `osd_` for the sliders alone (`osd_width`, `osd_margin_x`, `osd_max_visible`…) |
+| `width` | 400 | A card's width (px) |
 | `gap` | 10 | Between cards (px) |
-| `max_visible` | 3 | Cards at once; the rest wait behind "+N more" |
-| `icon_size` | 44 | The image or icon tile (px) |
-| `body_lines` | 4 | Lines of body before "…" |
+| `max_visible` | 3 | Cards at once; the rest wait behind "N more waiting" (calls and urgent ones never wait) |
+| `group` | true | Several from one app share one card: the newest in full, older ones as a line each |
+| `group_lines` | 2 | Older lines on a shared card |
+| `keys` | true | The newest card has the focus, and `akashvani key` acts on it |
+| `copy_codes` | true | A one-time code in a notification (OTP, login code) gets a Copy code button |
+| `call_timeout` | 120000 | ms a call card stays if the phone never says the call ended |
+| `calls_in_dnd` | true | A phone call (ekatva) rings through do not disturb |
+| `dnd_summary` | true | When do not disturb ends, one card says what came in, instead of each one |
+| `body_lines` | 3 | Lines of body before "…" |
 | `max_actions` | 3 | Action buttons on a card |
-| `show_app` / `show_time` / `show_actions` / `show_fallback_icon` | true | Parts of a card you can turn off |
+| `show_time` / `show_actions` | true | Parts of a card you can turn off |
 | `animation` | `slide` | `slide`, `fade` or `none` |
 | `animation_ms` | 220 | How long it takes |
 | `layer` | `top` | `top` (over windows, under Vyom's panels) or `overlay` (over fullscreen windows too) |
@@ -295,29 +303,43 @@ category = "call"
 show_in_dnd = true
 ```
 
+## Kinds of card
+
+| Kind | When | Looks |
+|---|---|---|
+| Normal | Anything | The app's small icon, name and time on a quiet line; the title; the body (paths, branches, `code` set in mono); buttons with their keys; a hairline at the bottom for time left |
+| Urgent | `urgency` critical | A red rail and a red tag in words; no timer: it waits for you; never waits behind others |
+| Shared | Several from one app | One card: the newest in full, a line for each older one, a count |
+| Slider | A `value` hint with a sync tag (volume, brightness) | One slim line: icon, bar, number (at `osd_position` when set) |
+| Call | ekatva: a phone ringing | The caller's picture or initials with a pulsing green ring, their number partly hidden, Decline and Answer; on top, till the call is handled |
+| Missed call, text, phone app | ekatva | "Missed call on Pixel 8", the sender's initials, "WhatsApp on Pixel 8" for the phone's own apps; a one-time code gets Copy code |
+
+ekatva tags its notifications (`x-ekatva-kind` call / missed / sms / phone, `-device`, `-contact`, `-number`, `-app`); from older ekatva, akashvani reads its titles ("Incoming call: …").
+
 ## Styling
 
-The popups are GTK 4 widgets styled by `style.css` in this repo, in your theme's colours. Anything in `~/.config/vyom/style.css` overrides it:
+The popups are GTK 4 widgets styled by `style.css` in this repo, in your theme's colours (Vyom's `@crust`, `@text`, `@accent`, `@red`…, so a light theme makes light cards). With [varna](https://github.com/Theyashsawarkar/varna), the theme also sets the popups' glass, fonts and corner radius (its `vyom.css`). Anything in `~/.config/vyom/style.css` overrides both:
 
 | Class | Is |
 |---|---|
 | `window.akashvani-toasts` | The popups' window (transparent) |
-| `.akv-card` | A card; also `.u-low` / `.u-normal` / `.u-critical`, `.app-<name>` (e.g. `.app-firefox`), `.akv-osd` (a slider), `.tint-<colour>`, a rule's `class` |
-| `.akv-icon` | The image / icon tile (`.glyph-tile` when it's the bell) |
-| `.akv-app`, `.akv-time`, `.akv-urgent` | The line above the title |
-| `.akv-summary`, `.akv-body` | The title and the body |
-| `progressbar.akv-progress`, `.akv-value` | A value's bar and its number |
-| `button.akv-action` (`.first`), `button.akv-close` | Action buttons, the close button (shows on hover) |
-| `button.akv-more` | The "+N more" pill |
+| `.akv-card` | A card; also `.u-low` / `.u-normal` / `.u-critical` / `.u-call`, `.k-<kind>`, `.focus` (the keys act on it), `.untimed`, `.app-<name>` (e.g. `.app-firefox`), `.tint-<colour>`, a rule's `class` |
+| `.akv-meta`: `.akv-app`, `.akv-via`, `.akv-tag` (`.red` / `.green` / `.yellow`), `.akv-count`, `.akv-time` | The quiet line |
+| `.akv-summary`, `.akv-body`, `.akv-avatar`, `.akv-pic`, `.akv-initials` | The content |
+| `.akv-older` | Older lines on a shared card |
+| `button.akv-action` (`.first`, `.answer`, `.decline`), `.akv-kc`, `button.akv-close` | Buttons, their keys, the close button (shows on hover) |
+| `progressbar.akv-timer` | The time-left hairline |
+| `.akv-call`, `.akv-ring`, `.akv-caller`, `.akv-number` | A phone call |
+| `.akv-osd` (`.muted`), `progressbar.akv-osd-bar`, `.akv-osd-value` | A slider |
+| `button.akv-more` | "N more waiting" (opens the panel) |
 
 ```css
-/* square-ish cards with a solid background, Firefox's in peach */
-.akv-card { border-radius: 12px; background-color: @base; }
+/* Firefox's cards in peach, bigger titles */
 .akv-card.app-firefox { border-color: @peach; }
 .akv-summary { font-size: 15px; }
 ```
 
-On SwayFX, blur the popups with `layer_effects "notifications" { blur enable; blur_ignore_transparent enable; corner_radius 20 }`.
+On SwayFX, blur the popups with `layer_effects "notifications" { blur enable; blur_ignore_transparent enable; corner_radius 12 }` (the cards' radius).
 
 ## Troubleshooting
 

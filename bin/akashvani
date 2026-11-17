@@ -14,6 +14,10 @@ commands and JSON, so scripts written for mako keep working).
                                       show / set / add / remove / toggle modes
                                       (dnd and do-not-disturb hold popups,
                                       silent mutes the sound)
+  akashvani key KEY                   act on the focused popup: enter (its main
+                                      action; answers a call), 1 2 3 (its
+                                      buttons), dismiss (declines a call),
+                                      next (focus the next card), dismiss-all
   akashvani status [-j]               server, modes, counts
   akashvani reload                    re-read the popups' settings
   akashvani doctor                    is akashvani the server? what's missing?
@@ -197,6 +201,10 @@ def run(cmd, args, as_json):
             dnd = "on" if st["dnd"] else "off"
             print(f"on screen {st['live']} (held {st['held']}) · history {st['history']} · "
                   f"modes {', '.join(st['modes'])} · do not disturb {dnd}")
+    elif cmd == "key":
+        if len(args) != 1 or args[0] not in ("enter", "1", "2", "3", "dismiss", "next", "dismiss-all"):
+            sys.exit("akashvani: key enter|1|2|3|dismiss|next|dismiss-all")
+        return 0 if call("Key", GLib.Variant("(s)", (args[0],)), "(b)")[0] else 1
     elif cmd == "reload":
         call("Reload")
     else:

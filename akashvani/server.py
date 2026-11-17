@@ -90,6 +90,10 @@ XML = """
     <method name="ClearHistory"/>
     <method name="Reload"/>
     <method name="Status"><arg type="s" name="json" direction="out"/></method>
+    <method name="Key">
+      <arg type="s" name="key" direction="in"/>
+      <arg type="b" name="ok" direction="out"/>
+    </method>
     <signal name="Changed"/>
   </interface>
 </node>
@@ -98,7 +102,7 @@ XML = """
 # The keys a notification has in `list -j` / `history -j` (makoctl's shape,
 # so scripts written for mako keep working), plus ours.
 PUBLIC = ("id", "app_name", "app_icon", "category", "desktop_entry", "summary", "body", "urgency", "actions",
-          "t", "value", "image_path", "resident", "transient")
+          "t", "value", "image_path", "resident", "transient", "kind", "via", "contact")
 
 
 def _str(v):
@@ -108,7 +112,7 @@ def _str(v):
 class Note(dict):
     """A notification: a dict in makoctl's JSON shape, plus what only the
     screen needs (the image's texture, the timer)."""
-    __slots__ = ("hidden", "left", "rule", "started", "sync", "texture", "timer")
+    __slots__ = ("code", "hidden", "left", "rule", "started", "sync", "texture", "timer", "title")
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -119,6 +123,8 @@ class Note(dict):
         self.rule = {}         # what the rules decided (timeout, hidden, sound, history...)
         self.hidden = False    # held: do not disturb or a rule (no popup)
         self.sync = ""         # x-canonical-private-synchronous / x-dunst-stack-tag
+        self.title = ""        # what the card shows as its title (the summary, minus "Incoming call: "...)
+        self.code = ""         # a one-time code found in the body (Copy code)
 
     def public(self):
         return {k: self.get(k) for k in PUBLIC if k in self}
@@ -141,6 +147,7 @@ class Server:
         self.toast = None
         self.modes = set(util.load_state(MODES, {}).get("modes") or ["default"])
         self.dnd_timer = 0
+        self.held_log = []       # apps held during this do not disturb (the summary when it ends)
         self._save_src = 0
         self._load_history()
         self._start()
@@ -242,6 +249,8 @@ class Server:
             return None
         if method == "Status":
             return GLib.Variant("(s)", (json.dumps(self.status()),))
+        if method == "Key":
+            return GLib.Variant("(b)", (bool(self.toast and self.toast.key(a[0])),))
         raise ValueError(f"unknown method {method}")
 
     def plugin_version(self):
@@ -283,7 +292,11 @@ class Server:
         if isinstance(value, int):
             n["value"] = max(0, min(100, value))
         ip = _str(hints.get("image-path") or hints.get("image_path"))
-        if ip:
+        if ip and not ip.startswith(("/", "file://")):
+            # an icon's name (libnotify's notify-send -i sends it here): the app's icon
+            if not n.get("app_icon"):
+                n["app_icon"] = ip
+        elif ip:
             n["image_path"] = ip.removeprefix("file://")
         if hints.get("resident"):
             n["resident"] = True
@@ -292,6 +305,10 @@ class Server:
         n.sync = _str(hints.get("x-canonical-private-synchronous") or hints.get("x-dunst-stack-tag"))
         if "__image" in hints:
             n.texture = image_texture(hints["__image"])
+        classify(n, hints)
+        n.code = one_time_code(n) if n["kind"] in ("normal", "sms", "phone") else ""
+        if n.code and self.opt("copy_codes", True):
+            n["actions"] = {"akv:copy": "Copy code", **n["actions"]}
 
         # replaces_id, or the same synchronous tag (volume, brightness): the
         # one on screen changes in place and keeps its id.
@@ -300,6 +317,17 @@ class Server:
             old = self.find(replaces)
         if old is None and n.sync:
             old = next((x for x in self.live if x.sync == n.sync and x["app_name"] == n["app_name"]), None)
+        if old is None and n["kind"] == "call":
+            # one call per phone: Android often reports a ringing call twice
+            # (without the number, then with it), and ekatva may post both
+            # before it learns the first one's id. The second joins the
+            # first: same card, same id, so ending the call closes it.
+            old = next((x for x in self.live if x.get("kind") == "call" and x.get("via") == n.get("via")), None)
+            if old is not None and not n.get("contact") and old.get("contact"):
+                for k in ("contact", "number"):
+                    if old.get(k):
+                        n[k] = old[k]
+                n.title = old.title
         if old is not None:
             n["id"] = old["id"]
             n["t"] = time.time()
@@ -311,8 +339,11 @@ class Server:
             return n["id"]
         if "urgency" in n.rule:
             n["urgency"] = n.rule["urgency"]
+        calls_through = n["kind"] == "call" and self.opt("calls_in_dnd", True)
         n.hidden = bool(n.rule.get("hidden")) or (self.dnd() and n["urgency"] != "critical"
-                                                    and not n.rule.get("show_in_dnd"))
+                                                    and not calls_through and not n.rule.get("show_in_dnd"))
+        if n.hidden and old is None and not n.rule.get("hidden"):
+            self.held_log.append(n["app_name"] if n["kind"] not in ("sms", "phone") else n.get("via") or "Phone")
         ms = self.timeout_for(n, timeout)
 
         with self.lock:
@@ -342,6 +373,12 @@ class Server:
         asked for (unless ignore_timeout); then the default by urgency."""
         if "timeout" in n.rule:
             return max(0, int(n.rule["timeout"]))
+        if n.get("kind") == "call":
+            # till it's answered or stops ringing; if the phone never says so
+            # (it went offline), it can't hang on screen for ever
+            return max(0, int(self.opt("call_timeout", 120000)))
+        if n.get("kind") == "missed":
+            return 0      # a call you meant to see: till you act on it
         if asked > 0 and not self.opt("ignore_timeout", False):
             return asked
         if asked == 0 and not self.opt("ignore_timeout", False):
@@ -405,6 +442,14 @@ class Server:
         self.close(n["id"], EXPIRED)
         return False
 
+    def remaining(self, n):
+        """How much of its time is left (1.0 .. 0.0), or None if it has no timer."""
+        total = n.get("timeout", 0)
+        if total <= 0:
+            return None
+        left = n.left - (time.monotonic() - n.started) * 1000 if n.timer else n.left
+        return max(0.0, min(1.0, left / total))
+
     def pause(self, n):
         """The pointer is on it: the clock stops."""
         if n.timer:
@@ -427,6 +472,8 @@ class Server:
             if self._keeps(n):
                 rec = n.public()
                 rec["closed"] = time.time()
+                if n.texture is not None and not rec.get("image_path"):
+                    rec["image_path"] = keep_image(n)   # the panel shows the picture later
                 self.history.insert(0, rec)
                 del self.history[int(self.opt("history_max", 200)):]
         if reason == DISMISSED:
@@ -452,6 +499,8 @@ class Server:
 
     def dismiss(self, nid=0, every=False):
         if every:
+            if self.toast:
+                self.toast.clear()      # all popups go together, none promoted in between
             ids = [n["id"] for n in list(self.live)]
             for i in ids:
                 self.close(i, DISMISSED)
@@ -483,10 +532,24 @@ class Server:
         n = self.find(nid) if nid else (self.live[-1] if self.live else None)
         if n is None or action not in n["actions"]:
             return False
+        if action.startswith("akv:"):          # ours, not the app's
+            self.local_action(n, action)
+            self.close(n["id"], DISMISSED)
+            return True
         self._emit(NAME, "ActionInvoked", GLib.Variant("(us)", (n["id"], action)))
         if not n.get("resident"):
             self.close(n["id"], DISMISSED)
         return True
+
+    def plugin_open(self):
+        """Open the panel (the popups' "N more waiting")."""
+        open_panel()
+
+    def local_action(self, n, action):
+        if action == "akv:copy" and n.code:
+            copy_text(n.code)
+        elif action == "akv:panel":
+            open_panel()
 
     def clear_history(self):
         with self.lock:
@@ -506,20 +569,40 @@ class Server:
         self.modes = new
         util.save_state(MODES, {"modes": sorted(new), "since": time.time() if self.dnd() else 0})
         if was_dnd and not self.dnd():
-            # held ones that are still live now show
+            # held ones don't pour out one by one: the ones that wait for you
+            # (no timeout) show, the rest are in the history, and one card says
+            # what came in
             for n in self.live:
-                if n.hidden and not n.rule.get("hidden"):
+                if n.hidden and not n.rule.get("hidden") and n.get("timeout", 0) == 0:
                     n.hidden = False
                     if self.toast:
                         self.toast.show(n)
             self.cancel_dnd_timer()
-        elif self.dnd() and not was_dnd and self.toast:
+            held, self.held_log = self.held_log, []
+            if held and self.opt("dnd_summary", True):
+                GLib.idle_add(self._dnd_summary, held)
+        elif self.dnd() and not was_dnd:
+            self.held_log = []
+        if self.dnd() and not was_dnd and self.toast:
             for n in self.live:
                 if n["urgency"] != "critical" and not n.rule.get("show_in_dnd"):
                     n.hidden = True
                     self.toast.remove(n)
         self._emit(CTL_IFACE, "Changed", None)
         self.changed()
+
+    def _dnd_summary(self, held):
+        counts = {}
+        for a in held:
+            counts[a or "Other"] = counts.get(a or "Other", 0) + 1
+        parts = ", ".join(f"{a} {c}" for a, c in sorted(counts.items(), key=lambda x: -x[1]))
+        word = "notification" if len(held) == 1 else "notifications"
+        params = GLib.Variant("(susssasa{sv}i)", (
+            "akashvani", 0, "notifications-disabled-symbolic", "While do not disturb was on",
+            f"{len(held)} {word} came in: {parts}. They're in the history.",
+            ["akv:panel", "Show them"], {"transient": GLib.Variant("b", True)}, 10000))
+        self.notify(params)
+        return False
 
     def add_mode(self, m):
         self.set_modes(self.modes - {"default"} | {m})
@@ -597,6 +680,7 @@ class Server:
             util.save_state(HISTORY, data)
         except OSError as e:
             log.warning("akashvani: couldn't save the history: %s", e)
+        prune_images({h.get("image_path") for h in data["history"]})
         return False
 
     # ------------------------------------------------------------- for the panel
@@ -630,6 +714,38 @@ class Server:
 MATCH_KEYS = ("app", "summary", "body", "urgency", "category", "desktop_entry", "mode", "actionable", "sync")
 
 
+def image_dir():
+    return os.path.join(GLib.get_user_cache_dir(), "akashvani", "images")
+
+
+def keep_image(n):
+    """Save a note's image-data picture as a PNG for the history; its path, or None."""
+    try:
+        d = image_dir()
+        os.makedirs(d, exist_ok=True)
+        path = os.path.join(d, f"{n['id']}-{int(n['t'] * 1000)}.png")
+        n.texture.save_to_png(path)
+        return path
+    except Exception as e:
+        log.debug("akashvani: couldn't keep the picture: %s", e)
+        return None
+
+
+def prune_images(keep):
+    """Remove the saved pictures the history no longer has."""
+    d = image_dir()
+    try:
+        names = os.listdir(d)
+    except OSError:
+        return
+    for f in names:
+        if os.path.join(d, f) not in keep:
+            try:
+                os.remove(os.path.join(d, f))
+            except OSError:
+                pass
+
+
 def image_texture(v):
     """image-data (iiibiiay) as a Gdk.Texture, or None."""
     try:
@@ -643,3 +759,99 @@ def image_texture(v):
     except Exception as e:   # a malformed image must never cost the notification
         log.debug("akashvani: bad image-data: %s", e)
         return None
+
+
+# ----------------------------------------------------------------- kinds
+EKATVA_SHARE = ("Link from ", "Text from ", "File from ")
+
+
+def classify(n, hints):
+    """Which card a notification gets (n["kind"]), and what it shows.
+
+    ekatva (the phone link) tags its own with x-ekatva-kind, -device,
+    -contact, -number and -app; older ekatva only sends x-ekatva, so its
+    titles are read: "Incoming call: Asha", "Missed call: Asha", a text
+    message (mail-message-new with Reply), "WhatsApp: Dev team" (the phone's
+    own apps)."""
+    s = n["summary"]
+    n.title = s
+    n["kind"] = "osd" if "value" in n and n.sync else "normal"
+    ek = hints.get("x-ekatva") or any(k.startswith("x-ekatva-") for k in hints)
+    if not ek:
+        return
+    dev = _str(hints.get("x-ekatva-device")) or n["app_name"]
+    kind = _str(hints.get("x-ekatva-kind"))
+    if not kind:
+        if s.startswith("Incoming call: "):
+            kind = "call"
+        elif s.startswith("Missed call: "):
+            kind = "missed"
+        elif "message" in (n.get("app_icon") or "") and "reply" in n["actions"]:
+            kind = "sms"
+        elif ": " in s and not s.startswith(EKATVA_SHARE):
+            kind = "phone"
+        else:
+            kind = "share"
+    n["via"] = dev
+    if kind == "missed":    # it waits for you: say how to be done with it
+        n["actions"]["akv:dismiss"] = "Dismiss"
+    icon = _str(hints.get("x-ekatva-icon"))
+    if icon:
+        n["app_icon"] = icon      # the phone app's own icon (ekatva caches it as a file)
+    contact = _str(hints.get("x-ekatva-contact"))
+    if kind in ("call", "missed"):
+        n["contact"] = contact or s.split(": ", 1)[-1].strip() or _str(hints.get("x-ekatva-number"))
+        if kind == "missed":
+            n["app_name"] = "Missed call"
+        n.title = n["contact"]
+        num = _str(hints.get("x-ekatva-number"))
+        if num and num != n["contact"]:
+            n["number"] = num
+    elif kind == "sms":
+        n["contact"] = contact or s
+        n.title = n["contact"]
+        n["app_name"] = "Messages"
+    elif kind == "phone":
+        app = _str(hints.get("x-ekatva-app"))
+        if app:
+            n["app_name"] = app
+            if s.startswith(app + ": "):
+                n.title = s[len(app) + 2:]
+        elif ": " in s:
+            n["app_name"], n.title = s.split(": ", 1)
+        n["contact"] = n.title
+    n["kind"] = kind
+
+
+_CODE_WORD = re.compile(r"\b(otp|code|passcode|pin|verification|verify|one[- ]time|2fa|login)\b", re.IGNORECASE)
+_CODE = re.compile(r"(?<![\d.,:/-])(\d{3}[ -]\d{3}|\d{4,8})(?![\d,:/%-])(?!\.\d)")
+
+
+def one_time_code(n):
+    """A login code in the body ("Your OTP is 482 913"), or ""."""
+    text = re.sub(r"<[^>]+>", " ", f"{n['summary']} {n.get('body') or ''}")
+    if not _CODE_WORD.search(text):
+        return ""
+    m = _CODE.search(text)
+    return re.sub(r"[ -]", "", m.group(1)) if m else ""
+
+
+def copy_text(text):
+    """Onto the clipboard (wl-copy, else GTK's own)."""
+    if shutil.which("wl-copy"):
+        try:
+            p = Gio.Subprocess.new(["wl-copy", "--", text], Gio.SubprocessFlags.NONE)
+            p.wait_async(None, None, None)
+            return
+        except GLib.Error:
+            pass
+    try:
+        from gi.repository import Gdk
+        Gdk.Display.get_default().get_clipboard().set(text)
+    except Exception as e:
+        log.warning("akashvani: couldn't copy: %s", e)
+
+
+def open_panel():
+    vyom = shutil.which("vyom") or os.path.expanduser("~/.local/bin/vyom")
+    util.spawn([vyom, "akashvani"])

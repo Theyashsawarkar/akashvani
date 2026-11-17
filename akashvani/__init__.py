@@ -406,8 +406,12 @@ class Plugin(Base):
             self.stamp(live + hist)
         self.dnd = self.read_dnd()
         now = time.time()
-        since = util.load_state(DND, {}).get("since") or 0
-        self.held = sum(1 for n in live + hist if self.dnd[0] != "off" and since and n["t"] >= since)
+        # when do not disturb began: the server's own record when it's ours (the
+        # CLI and scripts set it there too), else the panel's
+        since = (self.server.dnd_since() if self.own() else 0) or util.load_state(DND, {}).get("since") or 0
+        # urgent ones aren't held: they still pop up
+        self.held = sum(1 for n in live + hist if self.dnd[0] != "off" and since and (n["t"] or 0) >= since
+                        and n.get("urgency") != "critical")
         today = datetime.date.today()
         self.today = sum(1 for n in live + hist if n["t"] and datetime.date.fromtimestamp(n["t"]) == today)
 

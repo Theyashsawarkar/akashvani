@@ -6,78 +6,150 @@
 .dnd button.seg { font-size: 11.5px; padding: 3px 9px; }
 
 /* ---- popups ---- */
+/* Content first, chrome last: a near-black card with one hairline, the
+   app on a quiet line, the title, the body. Colour only where it means
+   something: red urgent and Decline, green a live call and Answer, yellow
+   held, the accent where your keys act (the focused card). */
 window.akashvani-toasts { background: transparent; }
 
-.akv-card {
-  border-radius: 20px;
-  padding: 14px 16px 14px 14px;
-  background-color: alpha(@base, 0.84);
-  background-image: linear-gradient(to bottom, alpha(white, 0.07), alpha(white, 0) 45%);
-  border: 1px solid alpha(@accent, 0.30);
-  color: @text;
-  font-family: "Inter", "Noto Sans", sans-serif;
-  font-size: 13px;
-  transition: border-color 160ms ease, background-color 160ms ease;
-}
-.akv-card:hover { border-color: alpha(@accent, 0.65); background-color: alpha(@base, 0.92); }
+/* Without varna these stand in; varna's vyom.css (loaded after this) sets
+   the theme's own: text on a coloured capsule, and the mono font. */
+@define-color ink @crust;
+.akv-time, .akv-tag, .akv-count, .akv-kc, .akv-value, .akv-osd-value, .akv-number,
+.akv-older-time, .akv-appicon-letter { font-family: monospace; }
 
-/* what it means, at a glance: urgent is red, low is quiet */
-.akv-card.u-critical {
-  box-shadow: inset 0 0 0 1px alpha(@red, 0.35);
-  border-color: @red;
-  background-image: linear-gradient(to bottom, alpha(@red, 0.14), alpha(@red, 0.02) 60%);
+.akv-card {
+  border-radius: 14px;
+  padding: 16px 18px 0 18px;
+  background-color: alpha(@crust, 0.94);
+  background-image: none;
+  border: 1px solid alpha(@text, 0.08);
+  box-shadow: inset 0 1px alpha(white, 0.03);
+  color: @text;
+  font-size: 13.5px;
+  transition: border-color 180ms ease;
 }
-.akv-card.u-low { border-color: alpha(white, 0.10); }
-.akv-card.u-low .akv-summary { font-weight: 500; }
+.akv-card.untimed { padding-bottom: 16px; }
+.akv-card:hover { border-color: alpha(@text, 0.16); }
+.akv-card.focus { border-color: alpha(@accent, 0.45); }
+
+/* the quiet line */
+.akv-meta { min-height: 18px; font-size: 12px; }
+.akv-app { color: @subtext0; font-weight: 600; }
+.akv-via { color: @overlay1; }
+.akv-time { color: mix(@overlay1, @subtext0, 0.5); font-size: 11.5px; }
+.akv-appicon { border-radius: 4px; }
+.akv-appicon-tile { border-radius: 4px; min-width: 16px; min-height: 16px; background: alpha(@text, 0.10); color: @text; }
+.akv-appicon-letter { font-size: 10px; font-weight: 800; color: @ink; }
+.akv-appicon-tile.k-call   { background: @green;  color: @ink; }
+.akv-appicon-tile.k-missed { background: @red;    color: @ink; }
+.akv-appicon-tile.k-sms    { background: @green;  color: @ink; }
+.akv-appicon-tile.k-share  { background: @blue;   color: @ink; }
+.akv-tag { font-size: 11px; border-radius: 5px; padding: 0 5px; }
+.akv-tag.red    { color: @red;    background: alpha(@red, 0.13); }
+.akv-tag.green  { color: @green;  background: alpha(@green, 0.13); }
+.akv-tag.yellow { color: @yellow; background: alpha(@yellow, 0.13); }
+.akv-count { font-size: 11px; font-weight: 700; color: @ink;
+  background: @subtext1; border-radius: 6px; padding: 0 5px; }
+
+/* close: there when you point at the card */
+button.akv-close { background: none; background-image: none; border: none; box-shadow: none;
+  min-width: 20px; min-height: 20px; padding: 0; border-radius: 6px; color: @overlay1;
+  opacity: 0; transition: opacity 140ms ease, background-color 140ms ease; }
+.akv-card:hover button.akv-close { opacity: 1; }
+/* A card that waits for you (a missed call) always shows its ×. */
+.akv-card.k-missed button.akv-close { opacity: 0.8; }
+button.akv-close:hover { background: alpha(@red, 0.16); color: @red; }
+
+/* the content */
+.akv-content { margin-top: 10px; }
+.akv-summary { color: @text; font-size: 14.5px; font-weight: 650; }
+.akv-body { color: mix(@subtext0, @text, 0.35); font-size: 13.5px; }
+.akv-avatar { border-radius: 999px; }
+.akv-pic { border-radius: 9px; }
+.akv-initials-text { font-weight: 700; font-size: 14px; color: @ink; }
+.akv-initials.big .akv-initials-text { font-size: 18px; }
+.av-pink { background: @pink; } .av-teal { background: @teal; } .av-lavender { background: @lavender; }
+.av-peach { background: @peach; } .av-sky { background: @sky; } .av-green { background: @green; }
+.av-yellow { background: @yellow; } .av-mauve { background: @mauve; }
+
+/* older ones from the same app */
+.akv-older { margin-top: 12px; padding-top: 9px; border-top: 1px solid alpha(@text, 0.07); }
+.akv-older-text { color: mix(@subtext0, @text, 0.35); font-size: 12.5px; }
+.akv-older-time { color: @overlay1; font-size: 11px; }
+
+/* a value inside a card (a download) */
+progressbar.akv-progress trough { min-height: 5px; border-radius: 5px; background: alpha(@text, 0.08); border: none; }
+progressbar.akv-progress progress { min-height: 5px; border-radius: 5px; background: @text; border: none; }
+.akv-value { color: @subtext1; font-size: 12px; }
+
+/* actions, each with its key */
+.akv-actions { margin-top: 14px; }
+button.akv-action { background-image: none; box-shadow: none; min-height: 32px; padding: 0 10px; border-radius: 9px;
+  background-color: alpha(@text, 0.055); border: 1px solid alpha(@text, 0.08);
+  color: @subtext1; font-size: 13px; font-weight: 600; transition: background-color 120ms ease; }
+button.akv-action:hover { background-color: alpha(@text, 0.10); color: @text; }
+button.akv-action:active { background-color: alpha(@text, 0.14); }
+button.akv-action.first { color: @text; background-color: alpha(@accent, 0.13); border-color: alpha(@accent, 0.30); }
+button.akv-action.first:hover { background-color: alpha(@accent, 0.22); }
+.akv-kc { font-size: 10.5px; color: @overlay1;
+  border: 1px solid alpha(@text, 0.13); border-radius: 5px; padding: 0 4px; }
+button.akv-action.first .akv-kc { color: @accent; border-color: alpha(@accent, 0.40); }
+
+/* time left: a hairline at the bottom, stopped while you point at it */
+progressbar.akv-timer { margin: 14px 0 0 0; }
+progressbar.akv-timer trough { min-height: 2px; border-radius: 2px; background: alpha(@text, 0.05); border: none; }
+progressbar.akv-timer progress { min-height: 2px; border-radius: 2px; background: alpha(@accent, 0.45); border: none; }
+.akv-card.focus progressbar.akv-timer progress { background: @accent; }
+
+/* urgent: red where it counts, and a tag that says so in words */
+.akv-card.u-critical { border-color: alpha(@red, 0.42);
+  background-image: linear-gradient(to right, alpha(@red, 0.08), alpha(@red, 0) 45%);
+  box-shadow: inset 3px 0 @red; }
+.akv-card.u-critical button.akv-action.first { color: @red; background-color: alpha(@red, 0.12); border-color: alpha(@red, 0.35); }
+.akv-card.u-critical button.akv-action.first .akv-kc { color: @red; border-color: alpha(@red, 0.4); }
+.akv-card.k-missed { box-shadow: inset 3px 0 alpha(@red, 0.8); }
+
+/* a call from the phone (ekatva) */
+.akv-card.akv-call { border-color: alpha(@green, 0.38); padding: 18px; }
+.akv-card.akv-call.focus { border-color: alpha(@green, 0.65); }
+.akv-who { margin-top: 12px; }
+.akv-ring { border-radius: 999px; animation: akv-ring 1.6s ease-out infinite; }
+@keyframes akv-ring {
+  from { box-shadow: 0 0 0 0 alpha(@green, 0.60); }
+  to   { box-shadow: 0 0 0 10px alpha(@green, 0); }
+}
+.akv-caller { font-size: 17px; font-weight: 700; color: @text; }
+.akv-number { font-size: 12.5px; color: @subtext0; }
+.akv-call .akv-actions { margin-top: 16px; }
+button.akv-action.decline { color: @red; background-color: alpha(@red, 0.10); border-color: alpha(@red, 0.32); }
+button.akv-action.decline:hover { background-color: alpha(@red, 0.20); }
+button.akv-action.decline .akv-kc { color: @red; border-color: alpha(@red, 0.40); }
+button.akv-action.answer { color: @ink; background-color: @green; border-color: @green; font-weight: 700; }
+button.akv-action.answer:hover { background-color: shade(@green, 1.08); }
+button.akv-action.answer .akv-kc { color: alpha(@ink, 0.75); border-color: alpha(@ink, 0.35); }
 
 /* a rule's tint: color = "green" */
-.akv-card.tint-red      { border-color: alpha(@red, 0.70); }
-.akv-card.tint-peach    { border-color: alpha(@peach, 0.70); }
-.akv-card.tint-yellow   { border-color: alpha(@yellow, 0.70); }
-.akv-card.tint-green    { border-color: alpha(@green, 0.70); }
-.akv-card.tint-teal     { border-color: alpha(@teal, 0.70); }
-.akv-card.tint-sky      { border-color: alpha(@sky, 0.70); }
-.akv-card.tint-blue     { border-color: alpha(@blue, 0.70); }
-.akv-card.tint-mauve    { border-color: alpha(@mauve, 0.70); }
-.akv-card.tint-pink     { border-color: alpha(@pink, 0.70); }
-.akv-card.tint-lavender { border-color: alpha(@lavender, 0.70); }
+.akv-card.tint-red      { border-color: alpha(@red, 0.55); }
+.akv-card.tint-peach    { border-color: alpha(@peach, 0.55); }
+.akv-card.tint-yellow   { border-color: alpha(@yellow, 0.55); }
+.akv-card.tint-green    { border-color: alpha(@green, 0.55); }
+.akv-card.tint-teal     { border-color: alpha(@teal, 0.55); }
+.akv-card.tint-sky      { border-color: alpha(@sky, 0.55); }
+.akv-card.tint-blue     { border-color: alpha(@blue, 0.55); }
+.akv-card.tint-mauve    { border-color: alpha(@mauve, 0.55); }
+.akv-card.tint-pink     { border-color: alpha(@pink, 0.55); }
+.akv-card.tint-lavender { border-color: alpha(@lavender, 0.55); }
 
-.akv-icon { border-radius: 13px; background: alpha(white, 0.05); }
-.akv-icon.glyph-tile { background: alpha(@accent, 0.14); }
-.akv-glyph { font-family: "JetBrainsMono Nerd Font"; font-size: 20px; color: @accent; }
-.u-critical .akv-icon.glyph-tile { background: alpha(@red, 0.16); }
-.u-critical .akv-glyph { color: @red; }
-
-.akv-app { color: @subtext0; font-size: 11.5px; font-weight: 600; }
-.akv-time { color: @overlay0; font-size: 11px; font-family: "JetBrainsMono Nerd Font"; }
-.akv-urgent { color: @red; background: alpha(@red, 0.15); border-radius: 7px; padding: 0 7px;
-  font-size: 10.5px; font-weight: 700; }
-.akv-summary { color: @text; font-size: 14px; font-weight: 700; }
-.akv-body { color: @subtext0; font-size: 12.5px; }
-
-/* the close button shows when you point at the card */
-button.akv-close { background-image: none; min-width: 22px; min-height: 22px; padding: 0; border-radius: 11px;
-  background: none; border: none; box-shadow: none; color: @overlay1;
-  font-family: "JetBrainsMono Nerd Font"; font-size: 13px; opacity: 0; transition: opacity 140ms ease; }
-.akv-card:hover button.akv-close { opacity: 1; }
-button.akv-close:hover { background: alpha(@red, 0.18); color: @red; }
-
-/* volume, brightness, a download */
-progressbar.akv-progress trough { min-height: 6px; border-radius: 4px; background: alpha(white, 0.08); border: none; }
-progressbar.akv-progress progress { min-height: 6px; border-radius: 4px; background: @accent; border: none; }
-.akv-value { color: @subtext1; font-size: 12px; font-family: "JetBrainsMono Nerd Font"; min-width: 38px; }
-.akv-osd .akv-summary { font-size: 13px; }
-
-/* actions */
-.akv-actions { margin-top: 2px; }
-button.akv-action { background-image: none; padding: 6px 12px; border-radius: 11px; font-size: 12.5px; font-weight: 600;
-  background: alpha(white, 0.06); color: @text; border: 1px solid alpha(white, 0.08); box-shadow: none; }
-button.akv-action:hover { background: alpha(white, 0.12); }
-button.akv-action.first { background: alpha(@accent, 0.18); color: @accent; border-color: alpha(@accent, 0.35); }
-button.akv-action.first:hover { background: alpha(@accent, 0.28); }
-.u-critical button.akv-action.first { background: alpha(@red, 0.18); color: @red; border-color: alpha(@red, 0.4); }
+/* sliders: one slim line, the icon says what it is */
+.akv-osd { min-height: 50px; padding: 0 18px; border-radius: 14px;
+  background-color: alpha(@crust, 0.94); border: 1px solid alpha(@text, 0.08); color: @text; }
+progressbar.akv-osd-bar trough { min-height: 6px; border-radius: 6px; background: alpha(@text, 0.09); border: none; }
+progressbar.akv-osd-bar progress { min-height: 6px; border-radius: 6px; background: @text; border: none; }
+.akv-osd-value { font-size: 12.5px; color: @subtext1; }
+.akv-osd.muted image, .akv-osd.muted .akv-osd-value { color: @overlay1; }
 
 /* more waiting behind the ones on screen */
-button.akv-more { background-image: none; padding: 3px 12px; border-radius: 11px; font-size: 11.5px; font-weight: 600; min-height: 0;
-  background-color: alpha(@base, 0.84); color: @subtext0; border: 1px solid alpha(@accent, 0.25); box-shadow: none; }
-button.akv-more:hover { color: @text; border-color: alpha(@accent, 0.6); }
+button.akv-more { background-image: none; box-shadow: none; padding: 3px 11px; border-radius: 9px; min-height: 0;
+  background-color: alpha(@crust, 0.94); border: 1px solid alpha(@text, 0.08); color: @subtext0; font-size: 12px; }
+button.akv-more:hover { color: @text; border-color: alpha(@accent, 0.5); }
