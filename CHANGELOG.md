@@ -2,7 +2,7 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
-## Unreleased
+## v0.6.0 -- 2026-11-17
 
 - **More room**: a clear gap between a card's title and its message (they touched), and between the older lines of a grouped card, which now say who and what ("Om · 5 missed calls", not just "Om").
 - **No timer on a ringing call**: it counted how long it had rung, which read as the call's length; the "ringing" tag says it.
