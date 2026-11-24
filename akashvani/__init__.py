@@ -193,6 +193,22 @@ class Plugin(Base):
     key_groups = vim.GROUPS
     empty_text = "No notifications"
 
+    # `vyom reload` gives a plugin its new [plugin.akashvani] by assigning
+    # `conf`, without a call: so the setter tells the server, which moves and
+    # restyles the popups (position, osd_position, margins...). Before this,
+    # a changed position only took effect after Vyom restarted.
+    @property
+    def conf(self):
+        return self._conf
+
+    @conf.setter
+    def conf(self, value):
+        first = not hasattr(self, "_conf")
+        self._conf = value or {}
+        server = getattr(self, "server", None)
+        if not first and server is not None:
+            GLib.idle_add(lambda: (server.reload(), False)[1])
+
     def __init__(self, vyom, conf):
         super().__init__(vyom, conf)
         self.dnd_box = None

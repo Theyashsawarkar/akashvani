@@ -143,13 +143,25 @@ button.akv-action.answer .akv-kc { color: alpha(@ink, 0.75); border-color: alpha
 .akv-card.tint-pink     { border-color: alpha(@pink, 0.55); }
 .akv-card.tint-lavender { border-color: alpha(@lavender, 0.55); }
 
-/* sliders: one slim line, the icon says what it is */
-.akv-osd { min-height: 50px; padding: 0 18px; border-radius: 14px;
+/* sliders (volume, brightness...): the icon in a tinted square, a rounded bar
+   filled in the slider's colour, the value. Volume blue and brightness
+   yellow, as on the bar; the microphone peach; anything else the accent;
+   grey when muted. */
+.akv-osd { min-height: 48px; padding: 0 16px 0 10px; border-radius: 14px;
   background-color: alpha(@crust, 0.94); border: 1px solid alpha(@text, 0.08); color: @text; }
-progressbar.akv-osd-bar trough { min-height: 6px; border-radius: 6px; background: alpha(@text, 0.09); border: none; }
-progressbar.akv-osd-bar progress { min-height: 6px; border-radius: 6px; background: @text; border: none; }
-.akv-osd-value { font-size: 12.5px; color: @subtext1; }
-.akv-osd.muted image, .akv-osd.muted .akv-osd-value { color: @overlay1; }
+.akv-osd-icon { min-width: 30px; min-height: 30px; border-radius: 9px; background: alpha(@accent, 0.16); color: @accent; }
+progressbar.akv-osd-bar trough { min-height: 8px; border-radius: 8px; background: alpha(@text, 0.08); border: none; }
+progressbar.akv-osd-bar progress { min-height: 8px; border-radius: 8px; background: @accent; border: none; }
+.akv-osd-value { font-size: 12.5px; font-weight: 700; color: @text; }
+.akv-osd.osd-volume .akv-osd-icon { background: alpha(@blue, 0.16); color: @blue; }
+.akv-osd.osd-volume progressbar.akv-osd-bar progress { background: @blue; }
+.akv-osd.osd-brightness .akv-osd-icon { background: alpha(@yellow, 0.16); color: @yellow; }
+.akv-osd.osd-brightness progressbar.akv-osd-bar progress { background: @yellow; }
+.akv-osd.osd-mic .akv-osd-icon { background: alpha(@peach, 0.16); color: @peach; }
+.akv-osd.osd-mic progressbar.akv-osd-bar progress { background: @peach; }
+.akv-osd.muted .akv-osd-icon { background: alpha(@overlay1, 0.14); color: @overlay1; }
+.akv-osd.muted .akv-osd-value { color: @overlay1; }
+.akv-osd.muted progressbar.akv-osd-bar progress { background: @overlay0; }
 
 /* more waiting behind the ones on screen */
 button.akv-more { background-image: none; box-shadow: none; padding: 3px 11px; border-radius: 9px; min-height: 0;

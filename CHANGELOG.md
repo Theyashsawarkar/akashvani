@@ -2,6 +2,12 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
+## v0.7.0 -- 2026-11-24
+
+- **The volume and brightness slider looks like it belongs**: its icon sits in a small rounded square, the bar is thicker and filled in the slider's colour (volume blue, brightness yellow, the microphone peach, anything else the accent; grey when muted), and the value reads "65%" (or "Muted"). The colour comes from the notification's standard icon name (`audio-volume-*`, `display-brightness`...).
+- **Fixed: `vyom reload` didn't move the popups**: a changed `position` or `osd_position` (or margins) only took effect after Vyom restarted; now the reload moves them.
+- **Fixed: a slider's icon could stay grey** when the icon theme ships its own fixed-colour "-symbolic" icons; sliders take Adwaita's recolourable ones first.
+
 ## v0.6.0 -- 2026-11-17
 
 - **More room**: a clear gap between a card's title and its message (they touched), and between the older lines of a grouped card, which now say who and what ("Om · 5 missed calls", not just "Om").

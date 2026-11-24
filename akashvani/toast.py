@@ -846,26 +846,44 @@ class Lane:
         card.add_css_class("untimed")
         return card
 
+    # What a slider is about, from its icon's standard name: it picks the
+    # colour (volume blue, brightness yellow, the microphone peach; anything
+    # else the accent), like the bar's own volume and brightness.
+    OSD_KINDS = (("volume", r"audio-volume|audio-output|speaker"),
+                 ("mic", r"microphone|audio-input"),
+                 ("brightness", r"brightness|display"))
+
     def _osd(self, sl):
         n = sl.main
         card = Gtk.Box(spacing=12)
         for c in ("akv-osd", f"app-{slug(n['app_name'])}"):
             card.add_css_class(c)
-        muted = n.get("value", 0) == 0 and re.search(r"mute|off", f"{n.get('body') or ''} {n.get('app_icon') or ''}", re.IGNORECASE)
+        name = n.get("app_icon") or ""
+        hay = f"{name} {n.get('app_name') or ''} {n.get('summary') or ''}"
+        kind = next((k for k, rx in self.OSD_KINDS if re.search(rx, hay, re.IGNORECASE)), "other")
+        card.add_css_class(f"osd-{kind}")
+        value = max(0, min(100, int(n.get("value", 0))))
+        muted = value == 0 and re.search(r"mute|off", f"{n.get('body') or ''} {name}", re.IGNORECASE)
         if muted:
             card.add_css_class("muted")
         icon = None
-        name = n.get("app_icon") or ""
         if name and not name.startswith("/"):
-            icon = self.symbolic(name if name.endswith("-symbolic") else name + "-symbolic", 18, quiet=True)
+            icon = self.symbolic(name if name.endswith("-symbolic") else name + "-symbolic", 16, quiet=True,
+                                 files_first=True)
         if icon is None:
-            icon = self.app_icon(n, 18)
+            icon = self.app_icon(n, 16)
+        # The icon in a small rounded square tinted with the slider's colour.
+        well = Gtk.Box(halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER, hexpand=False, vexpand=False)
+        well.add_css_class("akv-osd-icon")
         if icon is not None:
-            card.append(icon)
-        bar = Gtk.ProgressBar(fraction=n.get("value", 0) / 100, hexpand=True, valign=Gtk.Align.CENTER)
+            icon.set_hexpand(True)
+            icon.set_halign(Gtk.Align.CENTER)
+            well.append(icon)
+        card.append(well)
+        bar = Gtk.ProgressBar(fraction=value / 100, hexpand=True, valign=Gtk.Align.CENTER)
         bar.add_css_class("akv-osd-bar")
         card.append(bar)
-        card.append(_label("off" if muted else str(n.get("value", 0)), "akv-osd-value", width_chars=3, xalign=1))
+        card.append(_label("Muted" if muted else f"{value}%", "akv-osd-value", width_chars=5, xalign=1))
         card.set_tooltip_text(n["summary"] or n["app_name"])
         return card
 
@@ -885,10 +903,12 @@ class Lane:
             self.dismiss_slot(sl)
 
     # ------------------------------------------------------------- pictures and icons
-    def symbolic(self, name, size, quiet=False):
-        """A symbolic icon in the text's colour, from the theme or Adwaita's files."""
+    def symbolic(self, name, size, quiet=False, files_first=False):
+        """A symbolic icon in the text's colour, from the theme or Adwaita's files.
+        files_first: Adwaita's files before the theme, for icons that must take
+        a colour (the OSD): some themes ship "-symbolic" icons with a fixed fill."""
         img = None
-        if self.theme is not None and self.theme.has_icon(name):
+        if not files_first and self.theme is not None and self.theme.has_icon(name):
             img = Gtk.Image.new_from_icon_name(name)
         else:
             for d in SYMBOLIC_DIRS:
@@ -899,6 +919,8 @@ class Lane:
                         break
                 if img is not None:
                     break
+        if img is None and files_first and self.theme is not None and self.theme.has_icon(name):
+            img = Gtk.Image.new_from_icon_name(name)
         if img is None:
             return None if quiet else _label("•", "akv-glyph")
         img.set_pixel_size(size)
