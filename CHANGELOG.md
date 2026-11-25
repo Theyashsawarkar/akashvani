@@ -2,6 +2,11 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
+## Unreleased
+
+- **Spatial look**: popups are graphite glass with a lit top edge and 22 px corners; actions, tags and counts are pills, the first action filled near-white (red on an urgent card), app icons round; an urgent card is framed and washed in red instead of a red left bar; the volume and brightness bar is a pill with a round icon.
+- The website has Vayu's Spatial look: graphite glass, a floating navigation bar, near-white for links and the main button, and the tool's own colour only as its signature (the logo's glow, the shloka's line, the release dots). No more all-caps labels.
+
 ## v0.7.0 -- 2026-11-24
 
 - **The volume and brightness slider looks like it belongs**: its icon sits in a small rounded square, the bar is thicker and filled in the slider's colour (volume blue, brightness yellow, the microphone peach, anything else the accent; grey when muted), and the value reads "65%" (or "Muted"). The colour comes from the notification's standard icon name (`audio-volume-*`, `display-brightness`...).

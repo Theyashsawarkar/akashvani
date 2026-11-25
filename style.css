@@ -6,8 +6,8 @@
 .dnd button.seg { font-size: 11.5px; padding: 3px 9px; }
 
 /* ---- popups ---- */
-/* Content first, chrome last: a near-black card with one hairline, the
-   app on a quiet line, the title, the body. Colour only where it means
+/* Content first, chrome last (Vyom's Spatial look): a graphite glass card
+   with a lit top edge, the app on a quiet line, the title, the body. Colour only where it means
    something: red urgent and Decline, green a live call and Answer, yellow
    held, the accent where your keys act (the focused card). */
 window.akashvani-toasts { background: transparent; }
@@ -19,42 +19,42 @@ window.akashvani-toasts { background: transparent; }
 .akv-older-time, .akv-appicon-letter { font-family: monospace; }
 
 .akv-card {
-  border-radius: 14px;
+  border-radius: 22px;
   padding: 16px 18px 0 18px;
   background-color: alpha(@crust, 0.94);
-  background-image: none;
-  border: 1px solid alpha(@text, 0.08);
-  box-shadow: inset 0 1px alpha(white, 0.03);
+  background-image: linear-gradient(to bottom, alpha(white, 0.07), alpha(white, 0.03) 40%);
+  border: 1px solid alpha(white, 0.11);
+  box-shadow: inset 0 1px alpha(white, 0.12);
   color: @text;
   font-size: 13.5px;
   transition: border-color 180ms ease;
 }
 .akv-card.untimed { padding-bottom: 16px; }
-.akv-card:hover { border-color: alpha(@text, 0.16); }
-.akv-card.focus { border-color: alpha(@accent, 0.45); }
+.akv-card:hover { border-color: alpha(white, 0.18); }
+.akv-card.focus { border-color: alpha(@accent, 0.55); }
 
 /* the quiet line */
 .akv-meta { min-height: 18px; font-size: 12px; }
 .akv-app { color: @subtext0; font-weight: 600; }
 .akv-via { color: @overlay1; }
 .akv-time { color: mix(@overlay1, @subtext0, 0.5); font-size: 11.5px; }
-.akv-appicon { border-radius: 4px; }
-.akv-appicon-tile { border-radius: 4px; min-width: 16px; min-height: 16px; background: alpha(@text, 0.10); color: @text; }
+.akv-appicon { border-radius: 999px; }
+.akv-appicon-tile { border-radius: 999px; min-width: 16px; min-height: 16px; background: alpha(@text, 0.10); color: @text; }
 .akv-appicon-letter { font-size: 10px; font-weight: 800; color: @ink; }
 .akv-appicon-tile.k-call   { background: @green;  color: @ink; }
 .akv-appicon-tile.k-missed { background: @red;    color: @ink; }
 .akv-appicon-tile.k-sms    { background: @green;  color: @ink; }
 .akv-appicon-tile.k-share  { background: @blue;   color: @ink; }
-.akv-tag { font-size: 11px; border-radius: 5px; padding: 0 5px; }
+.akv-tag { font-size: 11px; border-radius: 999px; padding: 0 7px; }
 .akv-tag.red    { color: @red;    background: alpha(@red, 0.13); }
 .akv-tag.green  { color: @green;  background: alpha(@green, 0.13); }
 .akv-tag.yellow { color: @yellow; background: alpha(@yellow, 0.13); }
 .akv-count { font-size: 11px; font-weight: 700; color: @ink;
-  background: @subtext1; border-radius: 6px; padding: 0 5px; }
+  background: @subtext1; border-radius: 999px; padding: 0 6px; }
 
 /* close: there when you point at the card */
 button.akv-close { background: none; background-image: none; border: none; box-shadow: none;
-  min-width: 20px; min-height: 20px; padding: 0; border-radius: 6px; color: @overlay1;
+  min-width: 22px; min-height: 22px; padding: 0; border-radius: 999px; color: @overlay1;
   opacity: 0; transition: opacity 140ms ease, background-color 140ms ease; }
 .akv-card:hover button.akv-close { opacity: 1; }
 /* A card that waits for you (a missed call) always shows its ×. */
@@ -68,7 +68,7 @@ button.akv-close:hover { background: alpha(@red, 0.16); color: @red; }
 .akv-summary { color: @text; font-size: 14.5px; font-weight: 650; }
 .akv-body { color: mix(@subtext0, @text, 0.35); font-size: 13.5px; }
 .akv-avatar { border-radius: 999px; }
-.akv-pic { border-radius: 9px; }
+.akv-pic { border-radius: 14px; }
 .akv-initials-text { font-weight: 700; font-size: 14px; color: @ink; }
 .akv-initials.big .akv-initials-text { font-size: 18px; }
 .av-pink { background: @pink; } .av-teal { background: @teal; } .av-lavender { background: @lavender; }
@@ -81,22 +81,22 @@ button.akv-close:hover { background: alpha(@red, 0.16); color: @red; }
 .akv-older-time { color: @overlay1; font-size: 11px; }
 
 /* a value inside a card (a download) */
-progressbar.akv-progress trough { min-height: 5px; border-radius: 5px; background: alpha(@text, 0.08); border: none; }
-progressbar.akv-progress progress { min-height: 5px; border-radius: 5px; background: @text; border: none; }
+progressbar.akv-progress trough { min-height: 6px; border-radius: 999px; background: alpha(@text, 0.08); border: none; }
+progressbar.akv-progress progress { min-height: 6px; border-radius: 999px; background: @text; border: none; }
 .akv-value { color: @subtext1; font-size: 12px; }
 
 /* actions, each with its key */
 .akv-actions { margin-top: 14px; }
-button.akv-action { background-image: none; box-shadow: none; min-height: 32px; padding: 0 10px; border-radius: 9px;
-  background-color: alpha(@text, 0.055); border: 1px solid alpha(@text, 0.08);
+button.akv-action { background-image: none; box-shadow: inset 0 1px alpha(white, 0.06); min-height: 32px; padding: 0 14px; border-radius: 999px;
+  background-color: alpha(white, 0.08); border: none;
   color: @subtext1; font-size: 13px; font-weight: 600; transition: background-color 120ms ease; }
 button.akv-action:hover { background-color: alpha(@text, 0.10); color: @text; }
 button.akv-action:active { background-color: alpha(@text, 0.14); }
-button.akv-action.first { color: @text; background-color: alpha(@accent, 0.13); border-color: alpha(@accent, 0.30); }
-button.akv-action.first:hover { background-color: alpha(@accent, 0.22); }
+button.akv-action.first { color: @crust; background-color: @accent; }
+button.akv-action.first:hover { background-color: mix(@accent, white, 0.4); }
 .akv-kc { font-size: 10.5px; color: @overlay1;
-  border: 1px solid alpha(@text, 0.13); border-radius: 5px; padding: 0 4px; }
-button.akv-action.first .akv-kc { color: @accent; border-color: alpha(@accent, 0.40); }
+  border: 1px solid alpha(@text, 0.13); border-radius: 6px; padding: 0 4px; }
+button.akv-action.first .akv-kc { color: alpha(@crust, 0.7); border-color: alpha(@crust, 0.3); }
 
 /* time left: a hairline at the bottom, stopped while you point at it */
 progressbar.akv-timer { margin: 14px 0 0 0; }
@@ -105,12 +105,11 @@ progressbar.akv-timer progress { min-height: 2px; border-radius: 2px; background
 .akv-card.focus progressbar.akv-timer progress { background: @accent; }
 
 /* urgent: red where it counts, and a tag that says so in words */
-.akv-card.u-critical { border-color: alpha(@red, 0.42);
-  background-image: linear-gradient(to right, alpha(@red, 0.08), alpha(@red, 0) 45%);
-  box-shadow: inset 3px 0 @red; }
-.akv-card.u-critical button.akv-action.first { color: @red; background-color: alpha(@red, 0.12); border-color: alpha(@red, 0.35); }
-.akv-card.u-critical button.akv-action.first .akv-kc { color: @red; border-color: alpha(@red, 0.4); }
-.akv-card.k-missed { box-shadow: inset 3px 0 alpha(@red, 0.8); }
+.akv-card.u-critical { border-color: alpha(@red, 0.6);
+  background-image: linear-gradient(to bottom, alpha(@red, 0.12), alpha(@red, 0.05)); }
+.akv-card.u-critical button.akv-action.first { color: @crust; background-color: @red; }
+.akv-card.u-critical button.akv-action.first .akv-kc { color: alpha(@crust, 0.7); border-color: alpha(@crust, 0.3); }
+.akv-card.k-missed { border-color: alpha(@red, 0.55); }
 
 /* a call from the phone (ekatva) */
 .akv-card.akv-call { border-color: alpha(@green, 0.38); padding: 18px; }
@@ -124,10 +123,10 @@ progressbar.akv-timer progress { min-height: 2px; border-radius: 2px; background
 .akv-caller { font-size: 17px; font-weight: 700; color: @text; }
 .akv-number { font-size: 12.5px; color: @subtext0; }
 .akv-call .akv-actions { margin-top: 16px; }
-button.akv-action.decline { color: @red; background-color: alpha(@red, 0.10); border-color: alpha(@red, 0.32); }
+button.akv-action.decline { color: @red; background-color: alpha(@red, 0.16); }
 button.akv-action.decline:hover { background-color: alpha(@red, 0.20); }
 button.akv-action.decline .akv-kc { color: @red; border-color: alpha(@red, 0.40); }
-button.akv-action.answer { color: @ink; background-color: @green; border-color: @green; font-weight: 700; }
+button.akv-action.answer { color: @ink; background-color: @green; font-weight: 700; }
 button.akv-action.answer:hover { background-color: shade(@green, 1.08); }
 button.akv-action.answer .akv-kc { color: alpha(@ink, 0.75); border-color: alpha(@ink, 0.35); }
 
@@ -143,15 +142,16 @@ button.akv-action.answer .akv-kc { color: alpha(@ink, 0.75); border-color: alpha
 .akv-card.tint-pink     { border-color: alpha(@pink, 0.55); }
 .akv-card.tint-lavender { border-color: alpha(@lavender, 0.55); }
 
-/* sliders (volume, brightness...): the icon in a tinted square, a rounded bar
+/* sliders (volume, brightness...): the icon in a tinted circle, a rounded bar
    filled in the slider's colour, the value. Volume blue and brightness
    yellow, as on the bar; the microphone peach; anything else the accent;
    grey when muted. */
-.akv-osd { min-height: 48px; padding: 0 16px 0 10px; border-radius: 14px;
-  background-color: alpha(@crust, 0.94); border: 1px solid alpha(@text, 0.08); color: @text; }
-.akv-osd-icon { min-width: 30px; min-height: 30px; border-radius: 9px; background: alpha(@accent, 0.16); color: @accent; }
-progressbar.akv-osd-bar trough { min-height: 8px; border-radius: 8px; background: alpha(@text, 0.08); border: none; }
-progressbar.akv-osd-bar progress { min-height: 8px; border-radius: 8px; background: @accent; border: none; }
+.akv-osd { min-height: 52px; padding: 0 18px 0 10px; border-radius: 999px;
+  background-color: alpha(@crust, 0.94); background-image: linear-gradient(to bottom, alpha(white, 0.07), alpha(white, 0.03));
+  border: 1px solid alpha(white, 0.11); box-shadow: inset 0 1px alpha(white, 0.12); color: @text; }
+.akv-osd-icon { min-width: 32px; min-height: 32px; border-radius: 999px; background: alpha(@accent, 0.16); color: @accent; }
+progressbar.akv-osd-bar trough { min-height: 8px; border-radius: 999px; background: alpha(@text, 0.08); border: none; }
+progressbar.akv-osd-bar progress { min-height: 8px; border-radius: 999px; background: @accent; border: none; }
 .akv-osd-value { font-size: 12.5px; font-weight: 700; color: @text; }
 .akv-osd.osd-volume .akv-osd-icon { background: alpha(@blue, 0.16); color: @blue; }
 .akv-osd.osd-volume progressbar.akv-osd-bar progress { background: @blue; }
@@ -164,6 +164,6 @@ progressbar.akv-osd-bar progress { min-height: 8px; border-radius: 8px; backgrou
 .akv-osd.muted progressbar.akv-osd-bar progress { background: @overlay0; }
 
 /* more waiting behind the ones on screen */
-button.akv-more { background-image: none; box-shadow: none; padding: 3px 11px; border-radius: 9px; min-height: 0;
-  background-color: alpha(@crust, 0.94); border: 1px solid alpha(@text, 0.08); color: @subtext0; font-size: 12px; }
+button.akv-more { background-image: none; box-shadow: none; padding: 3px 12px; border-radius: 999px; min-height: 0;
+  background-color: alpha(@crust, 0.94); border: 1px solid alpha(white, 0.11); color: @subtext0; font-size: 12px; }
 button.akv-more:hover { color: @text; border-color: alpha(@accent, 0.5); }
