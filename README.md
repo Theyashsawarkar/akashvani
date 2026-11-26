@@ -32,11 +32,11 @@
 <!-- No screenshot: notifications shows personal data (your own notifications). -->
 
 <p align="center">
-  <img alt="akashvani: an urgent battery notification on screen with a red Urgent chip, each app's notifications stacked with a count and a time, the preview with numbered action buttons, Copy and a red Dismiss; do not disturb with a duration in the header" src="assets/screenshots/akashvani.png" width="100%">
+  <img alt="akashvani: today's notifications as rows, an urgent battery warning first with a red Urgent chip, each app's notifications stacked with a count; the picked one's preview with Copy; do not disturb as a switch in the header" src="assets/screenshots/akashvani.webp" width="100%">
 </p>
 
 <p align="center">
-  <img alt="akashvani's popups: a chat message with the sender's picture and Reply / Mark as read buttons, a finished download with Open and Show in folder, an urgent battery warning framed in red, and a volume bar" src="assets/screenshots/popups.png" width="70%">
+  <img alt="akashvani's popups at the top of the screen: an urgent battery warning framed in red, a build's Tests passed and a finished download, with 5 more waiting" src="assets/screenshots/popups.webp" width="70%">
 </p>
 <p align="center"><sub>Screenshots use made-up demo notifications.</sub></p>
 

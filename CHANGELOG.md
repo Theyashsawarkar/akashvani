@@ -4,6 +4,7 @@ Newest first. Releases are tags (`vX.Y.Z`).
 
 ## Unreleased
 
+- New screenshots in the Spatial look, taken with made-up demo data (WebP, sharp on high-density screens).
 - The website, closer to Vayu's own: the tool's screenshot blurred behind the page, a centred hero with the logo and the verse, the page you're on as the white pill, glass "On this page" and footer panels, releases as cards. No glow behind the logo, no coloured line beside the verse.
 - **Spatial look**: popups are graphite glass with a lit top edge and 22 px corners; actions, tags and counts are pills, the first action filled near-white (red on an urgent card), app icons round; an urgent card is framed and washed in red instead of a red left bar; the volume and brightness bar is a pill with a round icon.
 - The website has Vayu's Spatial look: graphite glass, a floating navigation bar, near-white for links and the main button, and the tool's own colour only as its signature (the logo's glow, the shloka's line, the release dots). No more all-caps labels.
