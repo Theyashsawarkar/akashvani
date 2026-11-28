@@ -2,7 +2,7 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
-## Unreleased
+## v0.8.0 -- 2026-11-28
 
 - The first notification of a session shows as quickly as the rest: the popups' windows are made and realized while Vyom warms up (`prewarm`), not when the first one comes (key to card on screen: 48-68 ms -> ~26, then 13-25 as before).
 
