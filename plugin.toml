@@ -1,7 +1,7 @@
 name = "akashvani"
 title = "Notifications"
 description = "The desktop's notifications: the server itself (beautiful popups in your theme, rules, history with times, do not disturb) and its panel, with each app's history stacked."
-version = "0.8.0"
+version = "0.9.0"
 vyom = "0.7.0"
 icon = "󰂚"
 color = "red"
