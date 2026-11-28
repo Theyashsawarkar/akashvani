@@ -2,6 +2,10 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
+## v0.9.1 -- 2026-11-28
+
+- The volume and brightness sliders take the bar's colours for their icons (lavender for volume, sky for brightness; were blue and yellow), so a slider and the bar's icon it came from match. Muted stays grey.
+
 ## v0.9.0 -- 2026-11-28
 
 - **The list kept on its workspace** (Vyom 0.13, ADR 17): Vyom now keeps panels open per workspace, hiding one when you leave its workspace or another panel takes the centre. While the list is hidden that way, popups show again (they wait only while you're reading it); when it shows again it has what came meanwhile, the selection on the same notification (`parked()` / `unparked()`).

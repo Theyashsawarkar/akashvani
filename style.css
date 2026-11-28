@@ -153,10 +153,10 @@ button.akv-action.answer .akv-kc { color: alpha(@ink, 0.75); border-color: alpha
 progressbar.akv-osd-bar trough { min-height: 8px; border-radius: 999px; background: alpha(@text, 0.08); border: none; }
 progressbar.akv-osd-bar progress { min-height: 8px; border-radius: 999px; background: @accent; border: none; }
 .akv-osd-value { font-size: 12.5px; font-weight: 700; color: @text; }
-.akv-osd.osd-volume .akv-osd-icon { background: alpha(@blue, 0.16); color: @blue; }
-.akv-osd.osd-volume progressbar.akv-osd-bar progress { background: @blue; }
-.akv-osd.osd-brightness .akv-osd-icon { background: alpha(@yellow, 0.16); color: @yellow; }
-.akv-osd.osd-brightness progressbar.akv-osd-bar progress { background: @yellow; }
+.akv-osd.osd-volume .akv-osd-icon { background: alpha(@lavender, 0.16); color: @lavender; }
+.akv-osd.osd-volume progressbar.akv-osd-bar progress { background: @lavender; }
+.akv-osd.osd-brightness .akv-osd-icon { background: alpha(@sky, 0.16); color: @sky; }
+.akv-osd.osd-brightness progressbar.akv-osd-bar progress { background: @sky; }
 .akv-osd.osd-mic .akv-osd-icon { background: alpha(@peach, 0.16); color: @peach; }
 .akv-osd.osd-mic progressbar.akv-osd-bar progress { background: @peach; }
 .akv-osd.muted .akv-osd-icon { background: alpha(@overlay1, 0.14); color: @overlay1; }
