@@ -2,6 +2,10 @@
 
 Newest first. Releases are tags (`vX.Y.Z`).
 
+## Unreleased
+
+- **The list kept on its workspace** (Vyom 0.13, ADR 17): Vyom now keeps panels open per workspace, hiding one when you leave its workspace or another panel takes the centre. While the list is hidden that way, popups show again (they wait only while you're reading it); when it shows again it has what came meanwhile, the selection on the same notification (`parked()` / `unparked()`).
+
 ## v0.8.0 -- 2026-11-28
 
 - The first notification of a session shows as quickly as the rest: the popups' windows are made and realized while Vyom warms up (`prewarm`), not when the first one comes (key to card on screen: 48-68 ms -> ~26, then 13-25 as before).

@@ -397,6 +397,21 @@ class Plugin(Base):
             self.server.toast.suspend(False)
         super().closed()
 
+    def parked(self):
+        """Vyom 0.13 (ADR 17): the list hid but stays open (you left its
+        workspace, or another panel took the centre). Popups show again
+        while it's hidden: they wait only while you're reading the list."""
+        if self.server is not None and self.server.toast is not None:
+            self.server.toast.suspend(False)
+
+    def unparked(self):
+        """It shows again as you left it, with what came meanwhile (the
+        selection stays on the same notification)."""
+        if self.server is not None and self.server.toast is not None:
+            self.server.toast.suspend(True)
+        if self.panel is not None:
+            self.panel.refresh_now(keep_selection=True)
+
     # --------------------------------------------------------------- times
     def stamp(self, notes):
         """Gives every notification a "t" (when it arrived), noted once per id."""
