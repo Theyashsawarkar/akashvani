@@ -4,6 +4,8 @@ Newest first. Releases are tags (`vX.Y.Z`).
 
 ## Unreleased
 
+- The first notification of a session shows as quickly as the rest: the popups' windows are made and realized while Vyom warms up (`prewarm`), not when the first one comes (key to card on screen: 48-68 ms -> ~26, then 13-25 as before).
+
 - Website: pranali joins the family list in the footer; the site builder passes ruff.
 - New screenshots in the Spatial look, taken with made-up demo data (WebP, sharp on high-density screens).
 - The website, closer to Vayu's own: the tool's screenshot blurred behind the page, a centred hero with the logo and the verse, the page you're on as the white pill, glass "On this page" and footer panels, releases as cards. No glow behind the logo, no coloured line beside the verse.

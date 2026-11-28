@@ -231,6 +231,16 @@ class Plugin(Base):
         except TypeError:
             THEME = None
 
+    def prewarm(self):
+        """Vyom calls this once while idle after it starts: the popups'
+        windows are made and realized now (their surface and renderer), so
+        the first notification of a session doesn't pay for it."""
+        toast = getattr(self.server, "toast", None)
+        for lane in (toast.lanes() if toast is not None else ()):
+            w = lane.window()
+            if w is not None and not w.get_realized():
+                w.realize()
+
     # --------------------------------------------------------------- the server
     def own(self):
         """True while akashvani is the notification server (else: mako)."""
